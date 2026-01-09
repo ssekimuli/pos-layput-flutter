@@ -6,9 +6,8 @@ import 'features/pos/screens/pos_layout.dart';
 void main() {
   runApp(const MyApp());
 
-  // Set initial window size for Desktop
   doWhenWindowReady(() {
-   const initialSize = Size(1024, 600);
+    const initialSize = Size(1024, 600); // Reduced height as requested
     appWindow.minSize = initialSize;
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
@@ -24,19 +23,38 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      // Use a Theme to keep your orange color consistent
       theme: ThemeData(primarySwatch: Colors.orange),
       home: Scaffold(
         body: Column(
           children: [
             // THE CUSTOM ORANGE TITLE BAR
             Container(
-              color: Colors.orange, // Standardize color here
+              height: 50, // Increased height
+              color: Colors.orange,
               child: WindowTitleBarBox(
                 child: Row(
                   children: [
-                    if (Platform.isMacOS) const SizedBox(width: 80), 
-                    Expanded(child: MoveWindow()), // Allows dragging
+                    if (Platform.isMacOS) const SizedBox(width: 80),
+                    
+                    // 1. The White Title Text
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        "POS DESKTOP SYSTEM",
+                        style: TextStyle(
+                          color: Colors.white, // White title
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+
+                    // 2. The Draggable Area (Fills the middle)
+                    Expanded(
+                      child: MoveWindow(),
+                    ),
+
+                    // 3. Window Buttons
                     if (Platform.isWindows) const WindowButtons(),
                   ],
                 ),
@@ -55,19 +73,18 @@ class WindowButtons extends StatelessWidget {
   
   @override
   Widget build(BuildContext context) {
-    // Fixed: changed 'buttonNormal' to 'normal'
     final colors = WindowButtonColors(
       iconNormal: Colors.white,
       mouseOver: Colors.orange[700],
       mouseDown: Colors.orange[800],
-      normal: Colors.orange, // Corrected parameter
+      normal: Colors.orange, 
     );
 
     final closeButtonColors = WindowButtonColors(
       mouseOver: const Color(0xFFD32F2F),
       mouseDown: const Color(0xFFB71C1C),
       iconNormal: Colors.white,
-      normal: Colors.orange, // Corrected parameter
+      normal: Colors.orange, 
     );
 
     return Row(
