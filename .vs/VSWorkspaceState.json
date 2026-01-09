@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\lib",
+    "\\lib\\features",
+    "\\lib\\features\\pos",
+    "\\lib\\features\\pos\\screens",
+    "\\lib\\widgets"
+  ],
+  "SelectedNode": "\\lib\\features\\pos\\screens\\pos_layout.dart",
+  "PreviewInSolutionExplorer": true
+}
