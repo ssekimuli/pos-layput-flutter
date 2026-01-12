@@ -11,14 +11,15 @@ class POSLayout extends StatefulWidget {
 
 class _POSLayoutState extends State<POSLayout> {
   // --- DESIGN SYSTEM COLORS ---
-  final Color brandTeal =Colors.orange;// const Color(0xFF015D70); 
+  final Color brandTeal = Colors.orange; 
   final Color accentYellow = const Color(0xFFFFD54F); 
   final Color workspaceBg = const Color(0xFFF3F6F9); 
+  final Color darkCanvas = const Color(0xFF1A1C1E); // Black sidebar color
   
   int _currentIndex = 0;
   Product? selectedProduct;
   List<Product> cart = [];
-  bool isCartVisible = true; // State for hiding/showing cart
+  bool isCartVisible = true;
 
   // YOUR PRODUCT LIST
   final List<Product> products = List.generate(8, (i) => Product(
@@ -33,7 +34,7 @@ class _POSLayoutState extends State<POSLayout> {
       backgroundColor: brandTeal, 
       body: Row(
         children: [
-          // 1. Sidebar (Fixed Overflow with SingleChildScrollView)
+          // 1. Sidebar (Black Background)
           _buildSidebar(),
 
           // 2. Main Workspace
@@ -48,7 +49,7 @@ class _POSLayoutState extends State<POSLayout> {
                 borderRadius: BorderRadius.circular(28),
                 child: Row(
                   children: [
-                    // Main Content (Product Grid / Details)
+                    // Main Content
                     Expanded(flex: 3, child: _buildMainContent()),
                     
                     // Conditional Cart Panel
@@ -66,10 +67,11 @@ class _POSLayoutState extends State<POSLayout> {
     );
   }
 
-  // --- SIDEBAR (SCROLLABLE TO PREVENT OVERFLOW) ---
+  // --- SIDEBAR (FIXED OVERFLOW & BLACK THEME) ---
   Widget _buildSidebar() {
-    return SizedBox(
+    return Container(
       width: 100,
+      color: brandTeal,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -119,9 +121,13 @@ class _POSLayoutState extends State<POSLayout> {
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? brandTeal : Colors.white70),
+            Icon(icon, color: isSelected ? Colors.black : Colors.white70),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(color: isSelected ? brandTeal : Colors.white70, fontSize: 10)),
+            Text(label, style: TextStyle(
+              color: isSelected ? Colors.black : Colors.white70, 
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
+            )),
           ],
         ),
       ),
@@ -134,12 +140,7 @@ class _POSLayoutState extends State<POSLayout> {
 
     switch (_currentIndex) {
       case 0: return _buildProductGallery();
-      case 1: return _buildPlaceholder("Purchase");
-      case 2: return _buildPlaceholder("Receipt");
-      case 3: return _buildPlaceholder("Reports");
-      case 4: return _buildPlaceholder("Invoices");
-      case 5: return _buildPlaceholder("Stock");
-      default: return _buildProductGallery();
+      default: return _buildPlaceholder("Module");
     }
   }
 
@@ -150,11 +151,17 @@ class _POSLayoutState extends State<POSLayout> {
         children: [
           const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/100')),
           const SizedBox(width: 12),
-          const Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("Store Admin", style: TextStyle(fontSize: 12, color: Colors.black45)),
+            ],
+          ),
           const Spacer(),
           // Toggle Cart Button
           IconButton(
-            icon: Icon(isCartVisible ? Icons.visibility_off : Icons.shopping_cart, color: brandTeal),
+            icon: Icon(isCartVisible ? Icons.visibility_off : Icons.shopping_cart, color: Colors.black),
             onPressed: () => setState(() => isCartVisible = !isCartVisible),
           ),
           const SizedBox(width: 8),
@@ -172,12 +179,19 @@ class _POSLayoutState extends State<POSLayout> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.8
-              ),
-              itemCount: products.length,
-              itemBuilder: (context, i) => _productCard(products[i]),
+            child: Column(
+              children: [
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.8
+                    ),
+                    itemCount: products.length,
+                    itemBuilder: (context, i) => _productCard(products[i]),
+                  ),
+                ),
+                _buildBlackQuickActions(),
+              ],
             ),
           ),
         ),
@@ -185,15 +199,41 @@ class _POSLayoutState extends State<POSLayout> {
     );
   }
 
+  Widget _buildBlackQuickActions() {
+    final actions = ["Open", "Close", "Hold", "New"];
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: actions.map((a) => Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black, 
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+            ),
+            onPressed: () {},
+            child: Text(a),
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
   Widget _productCard(Product p) {
     return InkWell(
       onTap: () => setState(() => selectedProduct = p),
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: Colors.white, 
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.coffee, size: 60, color: Colors.blueGrey),
+            const SizedBox(height: 8),
             Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             Text("\$${p.price}", style: TextStyle(color: brandTeal, fontWeight: FontWeight.bold)),
           ],
@@ -205,23 +245,33 @@ class _POSLayoutState extends State<POSLayout> {
   // --- PRODUCT DETAIL ---
   Widget _buildProductDetail(Product p) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(p.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => setState(() { cart.add(p); selectedProduct = null; isCartVisible = true; }),
-            child: const Text("Add to Cart"),
-          ),
-          TextButton(onPressed: () => setState(() => selectedProduct = null), child: const Text("Back")),
-        ],
+      child: Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.coffee, size: 100, color: Colors.blueGrey),
+            const SizedBox(height: 16),
+            Text(p.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text("\$${p.price}", style: TextStyle(fontSize: 20, color: brandTeal)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
+              onPressed: () => setState(() { cart.add(p); selectedProduct = null; isCartVisible = true; }),
+              child: const Text("Add to Cart"),
+            ),
+            TextButton(onPressed: () => setState(() => selectedProduct = null), child: const Text("Back", style: TextStyle(color: Colors.black54)))
+          ],
+        ),
       ),
     );
   }
 
-  // --- RIGHT ORDER PANEL ---
+  // --- RIGHT ORDER PANEL (CART) ---
   Widget _buildRightOrderPanel() {
+    double total = cart.fold(0, (sum, item) => sum + item.price);
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(20),
@@ -234,16 +284,40 @@ class _POSLayoutState extends State<POSLayout> {
               IconButton(icon: const Icon(Icons.close), onPressed: () => setState(() => isCartVisible = false)),
             ],
           ),
+          const Divider(),
           Expanded(
-            child: ListView.builder(
-              itemCount: cart.length,
-              itemBuilder: (context, i) => ListTile(title: Text(cart[i].name), trailing: Text("\$${cart[i].price}")),
+            child: cart.isEmpty 
+              ? const Center(child: Text("Cart is empty", style: TextStyle(color: Colors.grey)))
+              : ListView.builder(
+                  itemCount: cart.length,
+                  itemBuilder: (context, i) => ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(cart[i].name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    trailing: Text("\$${cart[i].price.toStringAsFixed(2)}"),
+                  ),
+                ),
+          ),
+          const Divider(),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(16)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Total", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text("\$${total.toStringAsFixed(2)}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
             ),
           ),
+          const SizedBox(height: 12),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: accentYellow, minimumSize: const Size(double.infinity, 50)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: accentYellow, 
+              minimumSize: const Size(double.infinity, 55),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+            ),
             onPressed: () {}, 
-            child: Text("Checkout", style: TextStyle(color: brandTeal)),
+            child: const Text("Checkout", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -253,8 +327,12 @@ class _POSLayoutState extends State<POSLayout> {
   Widget _topCircleBtn(IconData icon) {
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-      child: Icon(icon, color: Colors.black54, size: 20),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        shape: BoxShape.circle, // FIXED: Changed from BoxShadow to BoxShape
+        border: Border.all(color: Colors.black12)
+      ),
+      child: Icon(icon, color: Colors.black87, size: 20),
     );
   }
 
@@ -262,7 +340,7 @@ class _POSLayoutState extends State<POSLayout> {
     return Column(
       children: [
         _buildHeader(),
-        Expanded(child: Center(child: Text("$title Screen", style: const TextStyle(fontSize: 24)))),
+        Expanded(child: Center(child: Text("$title Screen", style: const TextStyle(fontSize: 24, color: Colors.grey)))),
       ],
     );
   }
