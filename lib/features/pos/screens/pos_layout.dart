@@ -3,94 +3,111 @@ import '../../../models/product.dart';
 import '../../../widgets/cart_panel.dart';
 
 class POSLayout extends StatefulWidget {
-  const POSLayout({super.key});
+  // 1. ADDED: The logout callback parameter
+  final VoidCallback onLogout;
+
+  // 2. UPDATED: The constructor to require onLogout
+  const POSLayout({super.key, required this.onLogout});
 
   @override
   State<POSLayout> createState() => _POSLayoutState();
 }
 
 class _POSLayoutState extends State<POSLayout> {
-  // 1. ADD THIS TRACKER
   int _currentIndex = 0; 
-  
   bool isCartVisible = true;
   Product? selectedProduct;
   List<Product> cart = [];
 
-  final List<Product> products = List.generate(
-    7,
-    (i) => Product(
-      name: "Item ${i + 1}",
-      price: (i + 1) * 12.50,
-      color: Colors.blueAccent.withOpacity(0.1 * (i % 5 + 2)),
-    ),
-  );
+  final List<Product> products = List.generate(7, (i) => Product(
+      name: "Item ${i + 1}", 
+      price: (i + 1) * 12.5, 
+      color: Colors.orange.withOpacity(0.2)
+  ));
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         children: [
-          // 1. Navigation Sidebar
-          NavigationRail(
-            // UPDATE: Use the tracker variable
-            selectedIndex: _currentIndex, 
-            // UPDATE: Add this function to make buttons clickable
-            onDestinationSelected: (int index) {
-              setState(() {
-                _currentIndex = index;
-                selectedProduct = null; // Go back to grid when switching tabs
-              });
-            },
-            labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(icon: Icon(Icons.store), label: Text('POS')),
-              NavigationRailDestination(icon: Icon(Icons.receipt), label: Text('Orders')),
-            ],
+          // 1. Sidebar with Shadow
+          Container(
+            decoration: BoxDecoration(
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+            ),
+            child: NavigationRail(
+              selectedIndex: _currentIndex > 3 ? null : _currentIndex,
+              backgroundColor: Colors.white,
+              onDestinationSelected: (idx) => setState(() {
+                _currentIndex = idx;
+                selectedProduct = null;
+              }),
+              labelType: NavigationRailLabelType.all,
+              trailing: Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.settings, color: _currentIndex == 4 ? Colors.orange : Colors.grey),
+                      onPressed: () => setState(() => _currentIndex = 4),
+                    ),
+                    // 3. UPDATED: The logout button now triggers the callback
+                    IconButton(
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                      onPressed: () {
+                        // This calls the function passed from main.dart
+                        widget.onLogout(); 
+                      },
+                      tooltip: 'Logout',
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              destinations: const [
+                NavigationRailDestination(icon: Icon(Icons.store), label: Text('POS')),
+                NavigationRailDestination(icon: Icon(Icons.receipt), label: Text('Orders')),
+                NavigationRailDestination(icon: Icon(Icons.inventory), label: Text('Stock')),
+                NavigationRailDestination(icon: Icon(Icons.analytics), label: Text('Stats')),
+              ],
+            ),
           ),
-          const VerticalDivider(width: 1),
 
-          // 2. Dynamic Middle Section
-          Expanded(
-            flex: 3,
-            child: _buildMainContent(), // Logic moved here to handle switching
-          ),
+          // 2. Middle Content
+          Expanded(flex: 3, child: _buildMainContent()),
 
           // 3. Conditional Cart
-          // UPDATE: Only show cart if on the POS tab (index 0)
           if (isCartVisible && _currentIndex == 0)
             CartPanel(
-              cart: cart, 
+              cart: cart,
               onToggle: () => setState(() => isCartVisible = false),
-              onRemove: (index) => setState(() => cart.removeAt(index)),
+              onRemove: (idx) => setState(() => cart.removeAt(idx)),
             ),
         ],
       ),
     );
   }
 
-  // --- NEW: Logic to switch between POS and Orders ---
+  // ... rest of the helper methods (_buildMainContent, _buildHeader, etc.) remain unchanged ...
   Widget _buildMainContent() {
-    if (_currentIndex == 1) {
-      return const Center(
-        child: Text("Orders History Screen", style: TextStyle(fontSize: 24)),
-      );
+    switch (_currentIndex) {
+      case 1: return const Center(child: Text("Orders History", style: TextStyle(fontSize: 24)));
+      case 2: return const Center(child: Text("Inventory", style: TextStyle(fontSize: 24)));
+      case 3: return const Center(child: Text("Statistics", style: TextStyle(fontSize: 24)));
+      case 4: return const Center(child: Text("Settings", style: TextStyle(fontSize: 24)));
+      default:
+        return Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: selectedProduct == null ? _buildGrid() : _buildDetail(selectedProduct!),
+              ),
+            ),
+          ],
+        );
     }
-
-    // This is your original POS logic
-    return Column(
-      children: [
-        _buildHeader(),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: selectedProduct == null 
-                ? _buildGrid() 
-                : _buildDetail(selectedProduct!),
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildHeader() {
@@ -101,10 +118,7 @@ class _POSLayoutState extends State<POSLayout> {
           const Text("POS System", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
           const Spacer(),
           if (!isCartVisible)
-            IconButton.filledTonal(
-              onPressed: () => setState(() => isCartVisible = true),
-              icon: const Icon(Icons.shopping_cart),
-            ),
+            IconButton.filled(onPressed: () => setState(() => isCartVisible = true), icon: const Icon(Icons.shopping_cart)),
         ],
       ),
     );
@@ -113,10 +127,10 @@ class _POSLayoutState extends State<POSLayout> {
   Widget _buildGrid() {
     return GridView.builder(
       padding: const EdgeInsets.all(20),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 200, mainAxisSpacing: 15, crossAxisSpacing: 15),
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(maxCrossAxisExtent: 200, mainAxisSpacing: 15, crossAxisSpacing: 15),
       itemCount: products.length,
       itemBuilder: (context, i) => Card(
+        elevation: 2,
         child: InkWell(
           onTap: () => setState(() => selectedProduct = products[i]),
           child: Center(child: Text(products[i].name)),
@@ -127,22 +141,22 @@ class _POSLayoutState extends State<POSLayout> {
 
   Widget _buildDetail(Product p) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(p.name, style: const TextStyle(fontSize: 30)),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () => setState(() {
-              cart.add(p);
-              isCartVisible = true;
-            }),
-            child: const Text("Add to Cart"),
+      child: Card(
+        child: Container(
+          width: 350, padding: const EdgeInsets.all(30),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(p.name, style: const TextStyle(fontSize: 28)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => setState(() { cart.add(p); isCartVisible = true; }),
+                child: const Text("Add to Cart"),
+              ),
+              TextButton(onPressed: () => setState(() => selectedProduct = null), child: const Text("Back"))
+            ],
           ),
-          TextButton(
-              onPressed: () => setState(() => selectedProduct = null),
-              child: const Text("Back"))
-        ],
+        ),
       ),
     );
   }

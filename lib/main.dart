@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'dart:io';
 import 'features/pos/screens/pos_layout.dart';
+import 'features/pos/screens/auth/login_screen.dart';
 
 void main() {
   runApp(const MyApp());
 
   doWhenWindowReady(() {
-    const initialSize = Size(1024, 600); // Reduced height as requested
+    const initialSize = Size(1024, 600);
     appWindow.minSize = initialSize;
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
@@ -16,8 +17,16 @@ void main() {
   });
 }
 
-class MyApp extends StatelessWidget {
+// Changed to StatefulWidget to manage login state
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _isLoggedIn = false; // Tracks if the user is authenticated
 
   @override
   Widget build(BuildContext context) {
@@ -27,40 +36,51 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         body: Column(
           children: [
-            // THE CUSTOM ORANGE TITLE BAR
+            // THE CUSTOM ORANGE TITLE BAR (Always visible)
             Container(
-              height: 50, // Increased height
+              height: 50,
               color: Colors.orange,
               child: WindowTitleBarBox(
                 child: Row(
                   children: [
                     if (Platform.isMacOS) const SizedBox(width: 80),
                     
-                    // 1. The White Title Text
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
                         "POS DESKTOP SYSTEM",
                         style: TextStyle(
-                          color: Colors.white, // White title
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
                         ),
                       ),
                     ),
 
-                    // 2. The Draggable Area (Fills the middle)
                     Expanded(
                       child: MoveWindow(),
                     ),
 
-                    // 3. Window Buttons
                     if (Platform.isWindows) const WindowButtons(),
                   ],
                 ),
               ),
             ),
-            const Expanded(child: POSLayout()),
+            
+            // DYNAMIC BODY: Logic to switch between Login and POS
+            Expanded(
+              child: _isLoggedIn 
+                ? POSLayout(onLogout: () {
+                    setState(() {
+                      _isLoggedIn = false; // Handle logout
+                    });
+                  }) 
+                : LoginScreen(onLoginSuccess: () {
+                    setState(() {
+                      _isLoggedIn = true; // Handle login success
+                    });
+                  }),
+            ),
           ],
         ),
       ),
