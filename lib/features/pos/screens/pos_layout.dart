@@ -69,70 +69,89 @@ class _POSLayoutState extends State<POSLayout> {
 
   // --- SIDEBAR (FIXED OVERFLOW & BLACK THEME) ---
   Widget _buildSidebar() {
-    return Container(
-      width: 100,
-      color: brandTeal,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.blur_on, color: Colors.white, size: 40),
-                      const SizedBox(height: 30),
-                      _sidebarItem(0, Icons.payment, "Payment"),
-                      _sidebarItem(1, Icons.shopping_cart, "Purchase"),
-                      _sidebarItem(2, Icons.receipt, "Receipt"),
-                      _sidebarItem(3, Icons.bar_chart, "Reports"),
-                      _sidebarItem(4, Icons.description, "Invoices"),
-                      _sidebarItem(5, Icons.inventory_2, "Stock"),
-                      const Spacer(), 
-                      _sidebarItem(6, Icons.settings, "Settings"),
-                      _sidebarItem(7, Icons.logout, "Logout", isLogout: true),
-                    ],
-                  ),
+  return Container(
+    width: 100,
+    color: brandTeal,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Column(
+                  children: [
+                    const Icon(Icons.blur_on, color: Colors.white, size: 40),
+                    const SizedBox(height: 30),
+                    _sidebarItem(0, Icons.payment, "Payment"),
+                    _sidebarItem(1, Icons.shopping_cart, "Purchase"),
+                    _sidebarItem(2, Icons.receipt, "Receipt"),
+                    _sidebarItem(3, Icons.bar_chart, "Reports"),
+                    _sidebarItem(4, Icons.description, "Invoices"),
+                    _sidebarItem(5, Icons.inventory_2, "Stock"),
+                    
+                    // --- Added Divider and Spacer ---
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Divider(color: Colors.white24, thickness: 1),
+                    ),
+                    const Spacer(), 
+                    
+                    _sidebarItem(6, Icons.settings, "Settings"),
+                    _sidebarItem(7, Icons.logout, "Logout", isLogout: true),
+                  ],
                 ),
               ),
             ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = false}) {
-    bool isSelected = _currentIndex == index;
-    return GestureDetector(
-      onTap: () {
-        if (isLogout) widget.onLogout();
-        setState(() => _currentIndex = index);
+          ),
+        );
       },
-      child: Container(
-        width: 80,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected ? accentYellow : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: isSelected ? Colors.black : Colors.white70),
-            const SizedBox(height: 4),
-            Text(label, style: TextStyle(
+    ),
+  );
+}
+
+Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = false}) {
+  bool isSelected = _currentIndex == index;
+  return GestureDetector(
+    onTap: () {
+      if (isLogout) widget.onLogout();
+      setState(() => _currentIndex = index);
+    },
+    child: Container(
+      width: 80,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? accentYellow : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        // --- Added Shadow Logic ---
+        boxShadow: isSelected 
+          ? [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ] 
+          : [], 
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: isSelected ? Colors.black : Colors.white70),
+          const SizedBox(height: 4),
+          Text(label, 
+            style: TextStyle(
               color: isSelected ? Colors.black : Colors.white70, 
               fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
-            )),
-          ],
-        ),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   // --- CONTENT LOGIC ---
   Widget _buildMainContent() {
