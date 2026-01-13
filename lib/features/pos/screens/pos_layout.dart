@@ -159,7 +159,7 @@ Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = fal
 
     switch (_currentIndex) {
       case 0: return _buildProductGallery();
-      default: return _buildPlaceholder("Module");
+      default: return _buildPlaceholder("${_currentIndex}Module");
     }
   }
 
