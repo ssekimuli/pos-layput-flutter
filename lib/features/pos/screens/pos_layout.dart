@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pos_desktop_ui/features/pos/screens/product_screen.dart';
+import 'package:pos_desktop_ui/features/pos/screens/purchase_screen.dart';
+import 'package:pos_desktop_ui/features/pos/screens/reports_screen.dart';
+import 'package:pos_desktop_ui/features/pos/screens/setting_screen.dart';
+import 'package:pos_desktop_ui/features/pos/screens/stock_screen.dart';
 import 'package:pos_desktop_ui/models/product.dart';
-import 'purchase_screen.dart';
-import 'reports_screen.dart';
-import 'stock_screen.dart';
 
 class POSLayout extends StatefulWidget {
   final VoidCallback onLogout;
@@ -23,7 +25,7 @@ class _POSLayoutState extends State<POSLayout> {
   bool isCartVisible = true;
 
   final List<Product> products = List.generate(
-      8,
+      12,
       (i) => Product(
           name: i % 2 == 0 ? "Coffee Mug - 350ml" : "Espresso Cup",
           price: i % 2 == 0 ? 14.99 : 9.50,
@@ -31,6 +33,57 @@ class _POSLayoutState extends State<POSLayout> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine which widget to show in the main area
+    Widget activeContent;
+
+    if (selectedProduct != null) {
+      activeContent = _contentWithHeader(
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Detail for ${selectedProduct!.name}", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => setState(() => selectedProduct = null),
+                child: const Text("Back to Gallery"),
+              )
+            ],
+          ),
+        ),
+      );
+    } else {
+      switch (_currentIndex) {
+        case 0:
+          activeContent = _contentWithHeader(ProductScreen(
+            products: products,
+            onProductSelected: (p) => setState(() => selectedProduct = p),
+          ));
+          break;
+        case 1:
+          activeContent = _contentWithHeader(PurchaseScreen(
+            product: products[0],
+            onBack: () => setState(() => selectedProduct = null),
+            onAddToCart: (p) => setState(() {
+              cart.add(p);
+              isCartVisible = true;
+            }),
+          ));
+          break;
+        case 3:
+          activeContent = _contentWithHeader(ReportsScreen());
+          break;
+        case 5:
+          activeContent = _contentWithHeader(StockScreen());
+          break;
+        case 6:
+          activeContent = _contentWithHeader(const SettingScreen());
+          break;
+        default:
+          activeContent = _contentWithHeader(Center(child: Text("Module $_currentIndex Coming Soon")));
+      }
+    }
+
     return Scaffold(
       backgroundColor: brandTeal,
       body: Row(
@@ -39,12 +92,13 @@ class _POSLayoutState extends State<POSLayout> {
           Expanded(
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-              decoration: BoxDecoration(color: workspaceBg, borderRadius: BorderRadius.circular(28)),
+              decoration: BoxDecoration(
+                  color: workspaceBg, borderRadius: BorderRadius.circular(28)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
                 child: Row(
                   children: [
-                    Expanded(flex: 3, child: _buildMainContent()),
+                    Expanded(flex: 3, child: activeContent),
                     if (isCartVisible) ...[
                       const VerticalDivider(width: 1, thickness: 1, color: Colors.black12),
                       Expanded(flex: 1, child: _buildRightOrderPanel()),
@@ -58,6 +112,8 @@ class _POSLayoutState extends State<POSLayout> {
       ),
     );
   }
+
+  // --- Sidebar & UI Helpers ---
 
   Widget _buildSidebar() {
     return Container(
@@ -122,7 +178,6 @@ class _POSLayoutState extends State<POSLayout> {
             Icon(icon, color: isSelected ? Colors.black : Colors.white70),
             const SizedBox(height: 4),
             Text(label,
-                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: isSelected ? Colors.black : Colors.white70,
                   fontSize: 10,
@@ -134,74 +189,12 @@ class _POSLayoutState extends State<POSLayout> {
     );
   }
 
-  Widget _buildMainContent() {
-    if (selectedProduct != null) {
-      return PurchaseScreen(
-        product: selectedProduct!,
-        onBack: () => setState(() => selectedProduct = null),
-        onAddToCart: (p) {
-          setState(() {
-            cart.add(p);
-            selectedProduct = null;
-            isCartVisible = true;
-          });
-        },
-      );
-    }
-
-    switch (_currentIndex) {
-      case 0: return _buildProductGallery();
-      case 3: return const ReportsScreen();
-      case 5: return const StockScreen();
-      default:
-        return _buildPlaceholderScreen(["Payment", "Purchase", "Receipt", "Reports", "Invoices", "Stock", "Settings"][_currentIndex]);
-    }
-  }
-
-  Widget _buildProductGallery() {
+  Widget _contentWithHeader(Widget child) {
     return Column(
       children: [
         _buildHeader(),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4, crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 0.8),
-                    itemCount: products.length,
-                    itemBuilder: (context, i) => _productCard(products[i]),
-                  ),
-                ),
-                _buildBlackQuickActions(),
-              ],
-            ),
-          ),
-        ),
+        Expanded(child: child),
       ],
-    );
-  }
-
-  Widget _productCard(Product p) {
-    return InkWell(
-      onTap: () => setState(() => selectedProduct = p),
-      child: Container(
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.coffee, size: 60, color: p.color),
-            const SizedBox(height: 8),
-            Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text("\$${p.price}", style: TextStyle(color: brandTeal, fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
     );
   }
 
@@ -229,25 +222,6 @@ class _POSLayoutState extends State<POSLayout> {
     );
   }
 
-  Widget _buildBlackQuickActions() {
-    final actions = ["Open", "Close", "Hold", "New"];
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        children: actions
-            .map((a) => Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
-                    onPressed: () {},
-                    child: Text(a),
-                  ),
-                ))
-            .toList(),
-      ),
-    );
-  }
-
   Widget _buildRightOrderPanel() {
     double total = cart.fold(0, (sum, item) => sum + item.price);
     return Container(
@@ -270,7 +244,7 @@ class _POSLayoutState extends State<POSLayout> {
                     itemCount: cart.length,
                     itemBuilder: (context, i) => ListTile(
                       title: Text(cart[i].name, style: const TextStyle(fontSize: 13)),
-                      trailing: Text("\$${cart[i].price}"),
+                      trailing: Text("\$${cart[i].price.toStringAsFixed(2)}"),
                     ),
                   ),
           ),
@@ -295,15 +269,6 @@ class _POSLayoutState extends State<POSLayout> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPlaceholderScreen(String title) {
-    return Column(
-      children: [
-        _buildHeader(),
-        Expanded(child: Center(child: Text("$title Module coming soon", style: const TextStyle(fontSize: 20, color: Colors.grey)))),
-      ],
     );
   }
 }
