@@ -87,25 +87,63 @@ class ProductScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions() {
-    final actions = ["Open Drawer", "End Shift", "Hold Order", "New Item"];
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        children: actions.map((a) => Padding(
+Widget _buildQuickActions() {
+  final List<Map<String, dynamic>> actions = [
+    {
+      "label": "Open Drawer", 
+      "icon": Icons.account_balance_wallet, 
+      "bg": Colors.black87, // Neutral
+      "text": Colors.white
+    },
+    {
+      "label": "End Shift", 
+      "icon": Icons.logout, 
+       "bg": Colors.black87, // Neutral
+      "text": Colors.white
+    },
+    {
+      "label": "Hold Order", 
+      "icon": Icons.front_hand, 
+       "bg": Colors.black87, // Neutral
+      "text": Colors.white
+    },
+    {
+      "label": "New Item", 
+      "icon": Icons.add, 
+      "bg": Colors.black87, // Neutral
+      "text": Colors.white
+    },
+  ];
+
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 20),
+    child: Row(
+      children: actions.map((action) {
+        return Padding(
           padding: const EdgeInsets.only(right: 12),
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.black87),
-              foregroundColor: Colors.black87,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ElevatedButton.icon(
+            icon: Icon(action['icon'], size: 20, color: action['text']),
+            label: Text(
+              action['label'],
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: action['text'],
+                fontSize: 14,
+              ),
             ),
             onPressed: () {},
-            child: Text(a, style: const TextStyle(fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: action['bg'],
+              elevation: 2,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
-        )).toList(),
-      ),
-    );
-  }
+        );
+      }).toList(),
+    ),
+  );
+}
 }
