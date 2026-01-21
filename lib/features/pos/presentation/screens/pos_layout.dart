@@ -1,1 +1,205 @@
-import \'package:flutter/material.dart\';\nimport \'package:flutter_riverpod/flutter_riverpod.dart\';\nimport \'package:pos_desktop_ui/core/models/product.dart\';\nimport \'package:pos_desktop_ui/core/providers/cart_provider.dart\';\nimport \'package:pos_desktop_ui/core/providers/product_provider.dart\';\nimport \'package:pos_desktop_ui/features/auth/presentation/providers/auth_provider.dart\';\nimport \'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart\';\nimport \'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart\';\nimport \'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart\';\nimport \'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart\';\nimport \'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart\';\n\nclass POSLayout extends ConsumerStatefulWidget {\n  const POSLayout({super.key});\n\n  @override\n  ConsumerState<POSLayout> createState() => _POSLayoutState();\n}\n\nclass _POSLayoutState extends ConsumerState<POSLayout> {\n  // Brand Colors\n  final Color brandTeal = const Color(0xFF006070);\n  final Color sidebarTeal = Colors.orange;\n  final Color accentYellow = const Color(0xFFFFCC4D);\n  final Color workspaceBg = const Color(0xFFF4F7F9);\n\n  int _currentIndex = 0;\n  Product? selectedProduct;\n  bool isCartVisible = true;\n\n  @override\n  Widget build(BuildContext context) {\n    final cart = ref.watch(cartProvider);\n    final products = ref.watch(productProvider);\n    Widget activeContent;\n\n    if (selectedProduct != null) {\n      activeContent = _contentWithHeader(\n        Center(\n          child: Column(\n            mainAxisAlignment: MainAxisAlignment.center,\n            children: [\n              Text(\"Detail for \${selectedProduct!.name}\", style: const TextStyle(fontSize: 20)),\n              const SizedBox(height: 20),\n              ElevatedButton(\n                onPressed: () => setState(() => selectedProduct = null),\n                child: const Text(\"Back to Gallery\"),\n              )\n            ],\n          ),\n        ),\n      );\n    } else {\n      switch (_currentIndex) {\n        case 0:\n          activeContent = _contentWithHeader(\n            ProductScreen(\n              products: products,\n              onProductSelected: (p) => ref.read(cartProvider.notifier).addProduct(p),\n              onActionSelected: (index) => setState(() {\n                _currentIndex = index;\n              }),\n            ),\n          );\n          break;\n        case 2:\n          activeContent = _contentWithHeader(const OpenDrawer());\n          break;\n        case 3:\n          activeContent = _contentWithHeader(ReportsScreen());\n          break;\n        case 5:\n          activeContent = _contentWithHeader(StockScreen());\n          break;\n        case 6:\n          activeContent = _contentWithHeader(const SettingScreen());\n          break;\n        default:\n          activeContent = _contentWithHeader(Center(child: Text(\"Module \$_currentIndex Coming Soon\")));\n      }\n    }\n\n    return Scaffold(\n      backgroundColor: sidebarTeal,\n      body: Row(\n        children: [\n          _buildSidebar(),\n          Expanded(\n            child: Container(\n              margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),\n              decoration: BoxDecoration(\n                color: workspaceBg, \n                borderRadius: BorderRadius.circular(28)\n              ),\n              child: ClipRRect(\n                borderRadius: BorderRadius.circular(28),\n                child: Row(\n                  children: [\n                    Expanded(flex: 3, child: activeContent),\n                    if (isCartVisible) ...[\n                      const VerticalDivider(width: 1, thickness: 1, color: Colors.black12),\n                      Expanded(flex: 1, child: _buildRightOrderPanel(cart)),\n                    ],\n                  ],\n                ),\n              ),\n            ),\n          ),\n        ],\n      ),\n    );\n  }\n\n  Widget _contentWithHeader(Widget child) {\n    return Column(\n      children: [\n        _buildHeader(),\n        Expanded(child: child),\n      ],\n    );\n  }\n\n  Widget _buildHeader() {\n    return Padding(\n      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),\n      child: Row(\n        children: [\n          const CircleAvatar(\n            backgroundColor: Colors.black12, \n            child: Icon(Icons.person, color: Colors.black)\n          ),\n          const SizedBox(width: 12),\n          const Column(\n            crossAxisAlignment: CrossAxisAlignment.start,\n            children: [\n              Text(\"Welcome Asad!\", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),\n              Text(\"Store Admin\", style: TextStyle(fontSize: 12, color: Colors.black45)),\n            ],\n          ),\n          const Spacer(),\n          IconButton(\n            icon: Icon(isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined),\n            onPressed: () => setState(() => isCartVisible = !isCartVisible),\n          ),\n        ],\n      ),\n    );\n  }\n\n  Widget _buildSidebar() {\n    return Container(\n      width: 100,\n      color: sidebarTeal,\n      child: Column(\n        children: [\n          const Padding(\n            padding: EdgeInsets.symmetric(vertical: 24),\n            child: Icon(Icons.blur_on, color: Colors.white, size: 40),\n          ),\n          _sidebarItem(0, Icons.payment, \"Payment\"),\n          _sidebarItem(2, Icons.receipt, \"Receipt\"),\n          _sidebarItem(3, Icons.bar_chart, \"Reports\"),\n          _sidebarItem(5, Icons.inventory_2, \"Stock\"),\n          const Spacer(),\n          _sidebarItem(6, Icons.settings, \"Settings\"),\n          _sidebarItem(7, Icons.logout, \"Logout\", isLogout: true),\n          const SizedBox(height: 20),\n        ],\n      ),\n    );\n  }\n\n  Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = false}) {\n    bool isSelected = _currentIndex == index;\n    return GestureDetector(\n      onTap: () {\n        if (isLogout) {\n          ref.read(authProvider.notifier).state = false;\n        } else {\n          setState(() { _currentIndex = index; selectedProduct = null; });\n        }\n      },\n      child: Container(\n        width: 70,\n        padding: const EdgeInsets.symmetric(vertical: 12),\n        margin: const EdgeInsets.symmetric(vertical: 4),\n        decoration: BoxDecoration(\n          color: isSelected ? accentYellow : Colors.transparent,\n          borderRadius: BorderRadius.circular(12),\n        ),\n        child: Column(\n          children: [\n            Icon(icon, color: isSelected ? Colors.black : Colors.white70, size: 20),\n            const SizedBox(height: 4),\n            Text(label, style: TextStyle(\n              color: isSelected ? Colors.black : Colors.white70,\n              fontSize: 10,\n              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,\n            )),\n          ],\n        ),\n      ),\n    );\n  }\n\n  Widget _buildRightOrderPanel(List<Product> cart) {\n    double subtotal = cart.fold(0, (sum, item) => sum + item.price);\n    double tax = subtotal * 0.15;\n    double discount = cart.isEmpty ? 0 : 5.00;\n    double total = subtotal + tax - discount;\n\n    return Container(\n      color: Colors.white,\n      padding: const EdgeInsets.all(16),\n      child: Column(\n        crossAxisAlignment: CrossAxisAlignment.start,\n        children: [\n          Row(\n            children: [\n              Expanded(\n                child: OutlinedButton(\n                  onPressed: () {},\n                  style: OutlinedButton.styleFrom(\n                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),\n                    padding: const EdgeInsets.symmetric(vertical: 12),\n                  ),\n                  child: const Text(\"+ Add Customer\", style: TextStyle(fontSize: 12, color: Colors.black87)),\n                ),\n              ),\n              const SizedBox(width: 8),\n              _squareActionBtn(Icons.refresh),\n            ],\n          ),\n          const SizedBox(height: 20),\n          const Text(\"Order Detail\", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),\n          const SizedBox(height: 10),\n          Row(\n            mainAxisAlignment: MainAxisAlignment.spaceBetween,\n            children: [\n              const Text(\"Items\", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),\n              Row(\n                children: [\n                  _textLink(\"Discount\"),\n                  _textLink(\"Coupon\"),\n                  _textLink(\"Note\", last: true),\n                ],\n              )\n            ],\n          ),\n          const Divider(height: 24),\n          Expanded(\n            child: cart.isEmpty \n              ? const Center(child: Text(\"Cart is empty\", style: TextStyle(color: Colors.grey)))\n              : ListView.builder(\n                  itemCount: cart.length,\n                  itemBuilder: (context, i) => _buildCartItem(cart[i], i),\n                ),\n          ),\n          _buildSummary(subtotal, tax, discount, total),\n        ],\n      ),\n    );\n  }\n\n  Widget _buildCartItem(Product item, int index) {\n    return Padding(\n      padding: const EdgeInsets.only(bottom: 12),\n      child: Row(\n        children: [\n          Container(\n            width: 45, height: 45,\n            decoration: BoxDecoration(color: const Color(0xFFE9E2D5), borderRadius: BorderRadius.circular(8)),\n            child: const Icon(Icons.coffee_outlined, size: 18, color: Colors.black26),\n          ),\n          const SizedBox(width: 10),\n          Expanded(\n            child: Column(\n              crossAxisAlignment: CrossAxisAlignment.start,\n              children: [\n                Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis, \n                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),\n                const Text(\"SKU-0012\", style: TextStyle(color: Colors.grey, fontSize: 10)),\n              ],\n            ),\n          ),\n          Text(\"\\$ \${item.price.toStringAsFixed(2)}\", \n            style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF006070), fontSize: 13)),\n          IconButton(\n            icon: const Icon(Icons.remove_circle_outline, size: 18, color: Colors.redAccent),\n            onPressed: () => ref.read(cartProvider.notifier).removeProduct(index),\n          )\n        ],\n      ),\n    );\n  }\n\n  Widget _buildSummary(double sub, double tax, double disc, double total) {\n    return Column(\n      children: [\n        const Divider(),\n        _summaryRow(\"Subtotal\", sub),\n        _summaryRow(\"Tax\", tax),\n        _summaryRow(\"Discount\", -disc),\n        const SizedBox(height: 10),\n        Row(\n          mainAxisAlignment: MainAxisAlignment.spaceBetween,\n          children: [\n            const Text(\"Total Payable\", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),\n            Text(\"\\$ \${total.toStringAsFixed(2)}\", style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),\n          ],\n        ),\n        const SizedBox(height: 16),\n        Row(\n          children: [\n            Expanded(child: _actionBtn(\"Checkout\", accentYellow, Colors.black, Icons.shopping_cart_checkout)),\n            const SizedBox(width: 8),\n            Expanded(child: _actionBtn(\"Fast Cash\", brandTeal, Colors.white, Icons.bolt)),\n          ],\n        )\n      ],\n    );\n  }\n\n  Widget _summaryRow(String label, double val) {\n    return Padding(\n      padding: const EdgeInsets.symmetric(vertical: 2),\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.spaceBetween,\n        children: [\n          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),\n          Text(\"\\$ \${val.toStringAsFixed(2)}\", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),\n        ],\n      ),\n    );\n  }\n\n  Widget _actionBtn(String label, Color bg, Color fg, IconData icon) {\n    return ElevatedButton.icon(\n      onPressed: () {},\n      icon: Icon(icon, size: 16),\n      label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),\n      style: ElevatedButton.styleFrom(\n        backgroundColor: bg, foregroundColor: fg,\n        minimumSize: const Size(0, 48),\n        elevation: 0,\n        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),\n      ),\n    );\n  }\n\n  Widget _squareActionBtn(IconData icon) {\n    return Container(\n      decoration: BoxDecoration(border: Border.all(color: Colors.black12), borderRadius: BorderRadius.circular(8)),\n      child: IconButton(onPressed: () {}, icon: Icon(icon, size: 18), color: Colors.black54),\n    );\n  }\n\n  Widget _textLink(String text, {bool last = false}) {\n    return Padding(\n      padding: EdgeInsets.only(right: last ? 0 : 8),\n      child: Text(text, style: TextStyle(color: brandTeal, fontWeight: FontWeight.bold, fontSize: 11)),\n    );\n  }\n}\n
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pos_desktop_ui/core/models/product.dart';
+import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
+import 'package:pos_desktop_ui/core/providers/product_provider.dart';
+import 'package:pos_desktop_ui/features/auth/presentation/providers/auth_provider.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart';
+import 'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart';
+import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
+import 'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart';
+import 'package:pos_desktop_ui/widgets/cart_panel.dart';
+
+class POSLayout extends ConsumerStatefulWidget {
+  const POSLayout({super.key});
+
+  @override
+  ConsumerState<POSLayout> createState() => _POSLayoutState();
+}
+
+class _POSLayoutState extends ConsumerState<POSLayout> {
+  // Brand Colors
+  final Color brandTeal = const Color(0xFF006070);
+  final Color sidebarTeal = Colors.orange;
+  final Color accentYellow = const Color(0xFFFFCC4D);
+  final Color workspaceBg = const Color(0xFFF4F7F9);
+
+  int _currentIndex = 0;
+  Product? selectedProduct;
+  bool isCartVisible = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final products = ref.watch(productProvider);
+    Widget activeContent;
+
+    if (selectedProduct != null) {
+      activeContent = _contentWithHeader(
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("Detail for \${selectedProduct!.name}", style: const TextStyle(fontSize: 20)),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => setState(() => selectedProduct = null),
+                child: const Text("Back to Gallery"),
+              )
+            ],
+          ),
+        ),
+      );
+    } else {
+      switch (_currentIndex) {
+        case 0:
+          activeContent = _contentWithHeader(
+            ProductScreen(
+              products: products,
+              onProductSelected: (p) => ref.read(cartProvider.notifier).addProduct(p),
+              onActionSelected: (index) => setState(() {
+                _currentIndex = index;
+              }),
+            ),
+          );
+          break;
+        case 2:
+          activeContent = _contentWithHeader(const OpenDrawer());
+          break;
+        case 3:
+          activeContent = _contentWithHeader(ReportsScreen());
+          break;
+        case 5:
+          activeContent = _contentWithHeader(StockScreen());
+          break;
+        case 6:
+          activeContent = _contentWithHeader(const SettingScreen());
+          break;
+        default:
+          activeContent = _contentWithHeader(Center(child: Text("Module \$_currentIndex Coming Soon")));
+      }
+    }
+
+    return Scaffold(
+      backgroundColor: sidebarTeal,
+      body: Row(
+        children: [
+          _buildSidebar(),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
+              decoration: BoxDecoration(
+                color: workspaceBg, 
+                borderRadius: BorderRadius.circular(28)
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Row(
+                  children: [
+                    Expanded(flex: 3, child: activeContent),
+                    if (isCartVisible) ...[
+                      const VerticalDivider(width: 1, thickness: 1, color: Colors.black12),
+                      const Expanded(flex: 1, child: CartPanel()),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _contentWithHeader(Widget child) {
+    return Column(
+      children: [
+        _buildHeader(),
+        Expanded(child: child),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Colors.black12, 
+            child: Icon(Icons.person, color: Colors.black)
+          ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("Store Admin", style: TextStyle(fontSize: 12, color: Colors.black45)),
+            ],
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined),
+            onPressed: () => setState(() => isCartVisible = !isCartVisible),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar() {
+    return Container(
+      width: 100,
+      color: sidebarTeal,
+      child: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Icon(Icons.blur_on, color: Colors.white, size: 40),
+          ),
+          _sidebarItem(0, Icons.payment, "Payment"),
+          _sidebarItem(2, Icons.receipt, "Receipt"),
+          _sidebarItem(3, Icons.bar_chart, "Reports"),
+          _sidebarItem(5, Icons.inventory_2, "Stock"),
+          const Spacer(),
+          _sidebarItem(6, Icons.settings, "Settings"),
+          _sidebarItem(7, Icons.logout, "Logout", isLogout: true),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = false}) {
+    bool isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () {
+        if (isLogout) {
+          ref.read(authProvider.notifier).state = false;
+        } else {
+          setState(() { _currentIndex = index; selectedProduct = null; });
+        }
+      },
+      child: Container(
+        width: 70,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? accentYellow : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : Colors.white70, size: 20),
+            const SizedBox(height: 4),
+            Text(label, style: TextStyle(
+              color: isSelected ? Colors.black : Colors.white70,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            )),
+          ],
+        ),
+      ),
+    );
+  }
+}
