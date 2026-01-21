@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pos_desktop_ui/models/product.dart';
+import 'package:pos_desktop_ui/core/models/product.dart';
 
 class PurchaseScreen extends StatelessWidget {
   final Product product;
