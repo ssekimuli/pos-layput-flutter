@@ -40,57 +40,64 @@ class ProductScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProductCard(Product p) {
-    return InkWell(
-      onTap: () => onProductSelected(p),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: p.color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.coffee, size: 48, color: p.color),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              p.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "\$${p.price.toStringAsFixed(2)}",
-              style: TextStyle(
-                color: brandColor,
-                fontWeight: FontWeight.w900,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
+Widget _buildProductCard(Product p) {
+  return InkWell(
+    onTap: () => onProductSelected(p),
+    borderRadius: BorderRadius.circular(12), // Slightly smaller radius
+    child: Container(
+      padding: const EdgeInsets.all(8), // Add internal padding
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 4, // Reduced blur
+            offset: const Offset(0, 2),
+          )
+        ],
       ),
-    );
-  }
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8), // Reduced from 12
+            decoration: BoxDecoration(
+              color: p.color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.coffee, size: 28, color: p.color), // Reduced from 48
+          ),
+          const SizedBox(height: 8), // Reduced from 12
+          Text(
+            p.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold, 
+              fontSize: 12, // Reduced from 14
+              height: 1.1,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "\$${p.price.toStringAsFixed(2)}",
+            style: TextStyle(
+              color: brandColor,
+              fontWeight: FontWeight.w900,
+              fontSize: 13, // Reduced from 16
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
-  Widget _buildQuickActions() {
+Widget _buildQuickActions() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+      padding: const EdgeInsets.symmetric(vertical: 12), // Reduced vertical padding
       child: Row(
         children: [
           // Index 2 = Receipt/Drawer, Index 3 = Reports, Index 5 = Stock
@@ -104,19 +111,26 @@ class ProductScreen extends StatelessWidget {
 
   Widget _actionButton(IconData icon, String label, VoidCallback onTap) {
     return Padding(
-      padding: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.only(right: 8), // Reduced spacing between buttons
       child: ElevatedButton.icon(
-        icon: Icon(icon, size: 20, color: Colors.white),
+        icon: Icon(icon, size: 16, color: Colors.white), // Smaller icon (16 instead of 20)
         label: Text(
           label,
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold, 
+            color: Colors.white, 
+            fontSize: 12, // Smaller font (12 instead of 14)
+          ),
         ),
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black87,
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 1,
+          // Significantly reduced padding to make the button smaller
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14), 
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8), // Sharper corners for a compact look
+          ),
         ),
       ),
     );
