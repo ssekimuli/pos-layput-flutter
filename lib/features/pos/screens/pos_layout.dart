@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pos_desktop_ui/features/pos/screens/open_drawer.dart';
 import 'package:pos_desktop_ui/features/pos/screens/product_screen.dart';
 import 'package:pos_desktop_ui/features/pos/screens/purchase_screen.dart';
 import 'package:pos_desktop_ui/features/pos/screens/reports_screen.dart';
@@ -33,7 +34,6 @@ class _POSLayoutState extends State<POSLayout> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine which widget to show in the main area
     Widget activeContent;
 
     if (selectedProduct != null) {
@@ -55,10 +55,15 @@ class _POSLayoutState extends State<POSLayout> {
     } else {
       switch (_currentIndex) {
         case 0:
-          activeContent = _contentWithHeader(ProductScreen(
-            products: products,
-            onProductSelected: (p) => setState(() => selectedProduct = p),
-          ));
+          activeContent = _contentWithHeader(
+            ProductScreen(
+              products: products,
+              onProductSelected: (p) => setState(() => selectedProduct = p),
+              onActionSelected: (index) => setState(() {
+                _currentIndex = index;
+              }),
+            ),
+          );
           break;
         case 1:
           activeContent = _contentWithHeader(PurchaseScreen(
@@ -70,6 +75,9 @@ class _POSLayoutState extends State<POSLayout> {
             }),
           ));
           break;
+        case 2:
+          activeContent = _contentWithHeader(const OpenDrawer());
+          break;  
         case 3:
           activeContent = _contentWithHeader(ReportsScreen());
           break;
@@ -92,8 +100,7 @@ class _POSLayoutState extends State<POSLayout> {
           Expanded(
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
-              decoration: BoxDecoration(
-                  color: workspaceBg, borderRadius: BorderRadius.circular(28)),
+              decoration: BoxDecoration(color: workspaceBg, borderRadius: BorderRadius.circular(28)),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
                 child: Row(
@@ -113,7 +120,7 @@ class _POSLayoutState extends State<POSLayout> {
     );
   }
 
-  // --- Sidebar & UI Helpers ---
+  // --- Sidebar & Helper Widgets ---
 
   Widget _buildSidebar() {
     return Container(
@@ -122,6 +129,7 @@ class _POSLayoutState extends State<POSLayout> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
+            // Allows the sidebar to scroll when items overflow
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
@@ -137,7 +145,9 @@ class _POSLayoutState extends State<POSLayout> {
                     _sidebarItem(3, Icons.bar_chart, "Reports"),
                     _sidebarItem(4, Icons.description, "Invoices"),
                     _sidebarItem(5, Icons.inventory_2, "Stock"),
-                    const Spacer(),
+                    // The Spacer ensures settings/logout stay at the bottom 
+                    // unless the screen is too short, then it scrolls.
+                    const Spacer(), 
                     const Divider(color: Colors.white24, indent: 20, endIndent: 20),
                     _sidebarItem(6, Icons.settings, "Settings"),
                     _sidebarItem(7, Icons.logout, "Logout", isLogout: true),

@@ -4,12 +4,14 @@ import 'package:pos_desktop_ui/models/product.dart';
 class ProductScreen extends StatelessWidget {
   final List<Product> products;
   final Function(Product) onProductSelected;
+  final Function(int) onActionSelected; // Callback to switch layout index
   final Color brandColor;
 
   const ProductScreen({
     super.key,
     required this.products,
     required this.onProductSelected,
+    required this.onActionSelected,
     this.brandColor = Colors.orange,
   });
 
@@ -19,14 +21,13 @@ class ProductScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         children: [
-          // Category Tabs or Search could go here
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, 
-                crossAxisSpacing: 16, 
-                mainAxisSpacing: 16, 
+                crossAxisCount: 4,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
                 childAspectRatio: 0.85,
               ),
               itemCount: products.length,
@@ -87,63 +88,37 @@ class ProductScreen extends StatelessWidget {
     );
   }
 
-Widget _buildQuickActions() {
-  final List<Map<String, dynamic>> actions = [
-    {
-      "label": "Open Drawer", 
-      "icon": Icons.account_balance_wallet, 
-      "bg": Colors.black87, // Neutral
-      "text": Colors.white
-    },
-    {
-      "label": "End Shift", 
-      "icon": Icons.logout, 
-       "bg": Colors.black87, // Neutral
-      "text": Colors.white
-    },
-    {
-      "label": "Hold Order", 
-      "icon": Icons.front_hand, 
-       "bg": Colors.black87, // Neutral
-      "text": Colors.white
-    },
-    {
-      "label": "New Item", 
-      "icon": Icons.add, 
-      "bg": Colors.black87, // Neutral
-      "text": Colors.white
-    },
-  ];
+  Widget _buildQuickActions() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        children: [
+          // Index 2 = Receipt/Drawer, Index 3 = Reports, Index 5 = Stock
+          _actionButton(Icons.account_balance_wallet, "Open Drawer", () => onActionSelected(2)),
+          _actionButton(Icons.logout, "End Shift", () => onActionSelected(3)),
+          _actionButton(Icons.add, "New Item", () => onActionSelected(5)),
+        ],
+      ),
+    );
+  }
 
-  return Container(
-    padding: const EdgeInsets.symmetric(vertical: 20),
-    child: Row(
-      children: actions.map((action) {
-        return Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: ElevatedButton.icon(
-            icon: Icon(action['icon'], size: 20, color: action['text']),
-            label: Text(
-              action['label'],
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: action['text'],
-                fontSize: 14,
-              ),
-            ),
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: action['bg'],
-              elevation: 2,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    ),
-  );
-}
+  Widget _actionButton(IconData icon, String label, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 12),
+      child: ElevatedButton.icon(
+        icon: Icon(icon, size: 20, color: Colors.white),
+        label: Text(
+          label,
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+        ),
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black87,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      ),
+    );
+  }
 }
