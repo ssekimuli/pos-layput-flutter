@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pos_desktop_ui/features/pos/screens/inventory_screen.dart';
 import 'package:pos_desktop_ui/features/pos/screens/open_drawer.dart';
 import 'package:pos_desktop_ui/features/pos/screens/product_screen.dart';
 import 'package:pos_desktop_ui/features/pos/screens/purchase_screen.dart';
@@ -82,6 +83,9 @@ class _POSLayoutState extends State<POSLayout> {
           break;
         case 6:
           activeContent = _contentWithHeader(const SettingScreen());
+          break;
+        case 4:
+          activeContent = _contentWithHeader(const InventoryScreen());
           break;
         default:
           activeContent = _contentWithHeader(Center(child: Text("Module $_currentIndex Coming Soon")));
@@ -170,7 +174,8 @@ class _POSLayoutState extends State<POSLayout> {
           _sidebarItem(0, Icons.payment, "Payment"),
           _sidebarItem(2, Icons.receipt, "Receipt"),
           _sidebarItem(3, Icons.bar_chart, "Reports"),
-          _sidebarItem(5, Icons.inventory_2, "Stock"),
+          _sidebarItem(4, Icons.inventory_2, "Stock"),
+          _sidebarItem(5, Icons.inventory_2, "Inventory"),
           const Spacer(),
           _sidebarItem(6, Icons.settings, "Settings"),
           _sidebarItem(7, Icons.logout, "Logout", isLogout: true),
