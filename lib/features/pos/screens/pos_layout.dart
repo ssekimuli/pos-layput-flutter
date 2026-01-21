@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pos_desktop_ui/features/pos/screens/inventory_screen.dart';
-import 'package:pos_desktop_ui/features/pos/screens/open_drawer.dart';
-import 'package:pos_desktop_ui/features/pos/screens/product_screen.dart';
-import 'package:pos_desktop_ui/features/pos/screens/purchase_screen.dart';
-import 'package:pos_desktop_ui/features/pos/screens/reports_screen.dart';
-import 'package:pos_desktop_ui/features/pos/screens/setting_screen.dart';
-import 'package:pos_desktop_ui/features/pos/screens/stock_screen.dart';
-import 'package:pos_desktop_ui/models/product.dart';
+import 'package:pos_desktop_ui/core/models/product.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart';
+import 'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart';
+import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
+import 'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart';
 
 class POSLayout extends StatefulWidget {
   final VoidCallback onLogout;
@@ -85,7 +83,7 @@ class _POSLayoutState extends State<POSLayout> {
           activeContent = _contentWithHeader(const SettingScreen());
           break;
         case 4:
-          activeContent = _contentWithHeader(const InventoryScreen());
+          activeContent = _contentWithHeader(StockScreen());
           break;
         default:
           activeContent = _contentWithHeader(Center(child: Text("Module $_currentIndex Coming Soon")));
