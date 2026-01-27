@@ -19,7 +19,7 @@ final productProvider = StateNotifierProvider<ProductNotifier, List<Product>>((r
       price: i % 2 == 0 ? 14.99 : 9.50,
       color: i % 2 == 0
           ? const Color.fromARGB(255, 199, 225, 233)
-          : const Color.fromARGB(255, 248, 229, 202),
+          : const Color.fromARGB(255, 248, 229, 202), id: '',
     ),
   ));
   return productNotifier;

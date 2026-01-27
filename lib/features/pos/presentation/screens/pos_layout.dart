@@ -103,29 +103,70 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     }
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-      child: Row(
-        children: [
-          const CircleAvatar(backgroundColor: Colors.black12, child: Icon(Icons.person, color: Colors.black)),
-          const SizedBox(width: 12),
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text("Store Admin", style: TextStyle(fontSize: 12, color: Colors.black45)),
-            ],
-          ),
-          const Spacer(),
-          IconButton(
-            icon: Icon(isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined),
-            onPressed: () => setState(() => isCartVisible = !isCartVisible),
-          ),
-        ],
-      ),
-    );
-  }
+Widget _buildHeader() {
+  // Watch the cart to get the total number of items
+  final cartItems = ref.watch(cartProvider);
+  
+  // Logic: Sum up all quantities in the cart
+  final totalItems = cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
+
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+    child: Row(
+      children: [
+        const CircleAvatar(
+          backgroundColor: Colors.black12, 
+          child: Icon(Icons.person, color: Colors.black)
+        ),
+        const SizedBox(width: 12),
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Text("Store Admin", style: TextStyle(fontSize: 12, color: Colors.black45)),
+          ],
+        ),
+        const Spacer(),
+        // Cart Toggle Button with Badge
+        Stack(
+          alignment: Alignment.topRight,
+          children: [
+            IconButton(
+              icon: Icon(isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined),
+              onPressed: () => setState(() => isCartVisible = !isCartVisible),
+            ),
+            // Only show the badge if there are items in the cart
+            if (totalItems > 0)
+              Positioned(
+                right: 8,
+                top: 8,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '$totalItems',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildSidebar() {
     return Container(
