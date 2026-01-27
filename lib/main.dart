@@ -13,7 +13,7 @@ void main() {
 
   // Configure bitsdojo_window
   doWhenWindowReady(() {
-    const initialSize = Size(1100, 700);
+    const initialSize = Size(1100, 600);
     appWindow.minSize = initialSize;
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
