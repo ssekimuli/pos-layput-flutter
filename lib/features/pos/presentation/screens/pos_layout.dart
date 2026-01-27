@@ -9,7 +9,7 @@ import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.
 import 'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart';
 import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
 import 'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart';
-import 'package:pos_desktop_ui/widgets/cart_panel.dart';
+import 'package:pos_desktop_ui/widgets/cart_panel.dart'; // Ensure this matches your cart file path
 
 class POSLayout extends ConsumerStatefulWidget {
   const POSLayout({super.key});
@@ -19,8 +19,6 @@ class POSLayout extends ConsumerStatefulWidget {
 }
 
 class _POSLayoutState extends ConsumerState<POSLayout> {
-  // Brand Colors
-  final Color brandTeal = const Color(0xFF006070);
   final Color sidebarTeal = Colors.orange;
   final Color accentYellow = const Color(0xFFFFCC4D);
   final Color workspaceBg = const Color(0xFFF4F7F9);
@@ -32,53 +30,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   @override
   Widget build(BuildContext context) {
     final products = ref.watch(productProvider);
-    Widget activeContent;
-
-    if (selectedProduct != null) {
-      activeContent = _contentWithHeader(
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Detail for \${selectedProduct!.name}", style: const TextStyle(fontSize: 20)),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () => setState(() => selectedProduct = null),
-                child: const Text("Back to Gallery"),
-              )
-            ],
-          ),
-        ),
-      );
-    } else {
-      switch (_currentIndex) {
-        case 0:
-          activeContent = _contentWithHeader(
-            ProductScreen(
-              products: products,
-              onProductSelected: (p) => ref.read(cartProvider.notifier).addProduct(p),
-              onActionSelected: (index) => setState(() {
-                _currentIndex = index;
-              }),
-            ),
-          );
-          break;
-        case 2:
-          activeContent = _contentWithHeader(const OpenDrawer());
-          break;
-        case 3:
-          activeContent = _contentWithHeader(ReportsScreen());
-          break;
-        case 5:
-          activeContent = _contentWithHeader(StockScreen());
-          break;
-        case 6:
-          activeContent = _contentWithHeader(const SettingScreen());
-          break;
-        default:
-          activeContent = _contentWithHeader(Center(child: Text("Module \$_currentIndex Coming Soon")));
-      }
-    }
+    Widget activeContent = _buildActiveContent(products);
 
     return Scaffold(
       backgroundColor: sidebarTeal,
@@ -89,14 +41,22 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
               decoration: BoxDecoration(
-                color: workspaceBg, 
-                borderRadius: BorderRadius.circular(28)
+                color: workspaceBg,
+                borderRadius: BorderRadius.circular(28),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(28),
                 child: Row(
                   children: [
-                    Expanded(flex: 3, child: activeContent),
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          _buildHeader(),
+                          Expanded(child: activeContent),
+                        ],
+                      ),
+                    ),
                     if (isCartVisible) ...[
                       const VerticalDivider(width: 1, thickness: 1, color: Colors.black12),
                       const Expanded(flex: 1, child: CartPanel()),
@@ -111,13 +71,36 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     );
   }
 
-  Widget _contentWithHeader(Widget child) {
-    return Column(
-      children: [
-        _buildHeader(),
-        Expanded(child: child),
-      ],
-    );
+  Widget _buildActiveContent(List<Product> products) {
+    if (selectedProduct != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Detail for ${selectedProduct!.name}", style: const TextStyle(fontSize: 20)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => setState(() => selectedProduct = null),
+              child: const Text("Back to Gallery"),
+            )
+          ],
+        ),
+      );
+    }
+
+    switch (_currentIndex) {
+      case 0:
+        return ProductScreen(
+          products: products,
+          onProductSelected: (p) => ref.read(cartProvider.notifier).addProduct(p),
+          onActionSelected: (index) => setState(() => _currentIndex = index),
+        );
+      case 2: return const OpenDrawer();
+      case 3: return ReportsScreen();
+      case 5: return StockScreen();
+      case 6: return const SettingScreen();
+      default: return Center(child: Text("Module $_currentIndex Coming Soon"));
+    }
   }
 
   Widget _buildHeader() {
@@ -125,10 +108,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: Colors.black12, 
-            child: Icon(Icons.person, color: Colors.black)
-          ),
+          const CircleAvatar(backgroundColor: Colors.black12, child: Icon(Icons.person, color: Colors.black)),
           const SizedBox(width: 12),
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,

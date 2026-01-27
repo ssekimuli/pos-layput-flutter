@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pos_desktop_ui/core/models/product.dart';
 import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
 
 class CartPanel extends ConsumerWidget {
@@ -8,92 +7,86 @@ class CartPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cart = ref.watch(cartProvider);
-    final notifier = ref.read(cartProvider.notifier);
-    double subtotal = cart.fold(0, (sum, item) => sum + item.price);
-    double tax = subtotal * 0.1;
-    double total = subtotal + tax;
+    final cartItems = ref.watch(cartProvider);
 
     return Container(
-      width: 350,
-      padding: const EdgeInsets.all(16.0),
       color: Colors.white,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Current Order', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: cart.length,
-              itemBuilder: (context, index) {
-                final product = cart[index];
-                return ListTile(
-                  leading: const Icon(Icons.shopping_bag_outlined),
-                  title: Text(product.name),
-                  subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                    onPressed: () => notifier.removeProduct(index),
-                  ),
-                );
-              },
+          const Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                Icon(Icons.shopping_basket_outlined, color: Color(0xFF006070)),
+                SizedBox(width: 10),
+                Text(
+                  "Current Order",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
           ),
-          const Divider(),
-          _buildSummaryRow('Subtotal', subtotal),
-          _buildSummaryRow('Tax', tax),
-          const Divider(),
-          _buildSummaryRow('Total', total, isTotal: true),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.payment, color: Colors.white),
-                  label: const Text('CHECKOUT', style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+          Expanded(
+            child: cartItems.isEmpty
+                ? const Center(child: Text("No items in cart", style: TextStyle(color: Colors.grey)))
+                : ListView.builder(
+                    itemCount: cartItems.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemBuilder: (context, index) {
+                      final item = cartItems[index];
+                      return Card(
+                        elevation: 0,
+                        color: const Color(0xFFF4F7F9),
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          subtitle: Text("\$${item.price}"),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                            onPressed: () => ref.read(cartProvider.notifier).removeProduct(index),
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: () => notifier.clearCart(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[300],
-                  padding: const EdgeInsets.all(16),
-                ),
-                child: const Icon(Icons.delete_outline, color: Colors.red),
-              ),
-            ],
-          )
+          ),
+          _buildSummary(cartItems),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, double amount, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildSummary(List cartItems) {
+    // Basic math for total
+    double total = cartItems.fold(0, (sum, item) => sum + (item.price ?? 0));
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
+      ),
+      child: Column(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 16,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Total", style: TextStyle(fontSize: 16, color: Colors.black54)),
+              Text("\$${total.toStringAsFixed(2)}", 
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF006070))),
+            ],
           ),
-          Text(
-            '\$${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: isTotal ? 18 : 16,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006070),
+              minimumSize: const Size(double.infinity, 56),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
+            onPressed: cartItems.isEmpty ? null : () {
+              // Action for payment
+            },
+            child: const Text("Place Order", style: TextStyle(fontSize: 18, color: Colors.white)),
           ),
         ],
       ),
