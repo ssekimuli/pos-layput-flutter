@@ -9,7 +9,7 @@ import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.
 import 'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart';
 import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
 import 'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart';
-import 'package:pos_desktop_ui/widgets/cart_panel.dart'; // Ensure this matches your cart file path
+import 'package:pos_desktop_ui/widgets/cart_panel.dart';
 
 class POSLayout extends ConsumerStatefulWidget {
   const POSLayout({super.key});
@@ -19,13 +19,16 @@ class POSLayout extends ConsumerStatefulWidget {
 }
 
 class _POSLayoutState extends ConsumerState<POSLayout> {
+  // Theme Colors
   final Color sidebarTeal = Colors.orange;
   final Color accentYellow = const Color(0xFFFFCC4D);
   final Color workspaceBg = const Color(0xFFF4F7F9);
-
+  
+  // UI State
   int _currentIndex = 0;
+  int _activeFooterIndex = 0; // Tracks which footer button is orange
   Product? selectedProduct;
-  bool isCartVisible = true;
+  bool isCartVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -48,18 +51,28 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                 borderRadius: BorderRadius.circular(28),
                 child: Row(
                   children: [
+                    // Main Content Area
                     Expanded(
                       flex: 3,
                       child: Column(
                         children: [
                           _buildHeader(),
                           Expanded(child: activeContent),
+                          _buildFooter(), 
                         ],
                       ),
                     ),
+                    // Right Cart Panel
                     if (isCartVisible) ...[
-                      const VerticalDivider(width: 1, thickness: 1, color: Colors.black12),
-                      const Expanded(flex: 1, child: CartPanel()),
+                      const VerticalDivider(
+                        width: 1, 
+                        thickness: 1, 
+                        color: Colors.black12
+                      ),
+                      const Expanded(
+                        flex: 1, 
+                        child: CartPanel()
+                      ),
                     ],
                   ],
                 ),
@@ -71,13 +84,15 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     );
   }
 
+  /// Main View Switcher
   Widget _buildActiveContent(List<Product> products) {
     if (selectedProduct != null) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Detail for ${selectedProduct!.name}", style: const TextStyle(fontSize: 20)),
+            Text("Detail for ${selectedProduct!.name}", 
+                style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => setState(() => selectedProduct = null),
@@ -103,71 +118,152 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     }
   }
 
-Widget _buildHeader() {
-  // Watch the cart to get the total number of items
-  final cartItems = ref.watch(cartProvider);
-  
-  // Logic: Sum up all quantities in the cart
-  final totalItems = cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
+  /// Top Navigation Bar
+  Widget _buildHeader() {
+    final cartItems = ref.watch(cartProvider);
+    final totalItems = cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
 
-  return Padding(
-    padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-    child: Row(
-      children: [
-        const CircleAvatar(
-          backgroundColor: Colors.black12, 
-          child: Icon(Icons.person, color: Colors.black)
-        ),
-        const SizedBox(width: 12),
-        const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Welcome Asad!", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            Text("Store Admin", style: TextStyle(fontSize: 12, color: Colors.black45)),
-          ],
-        ),
-        const Spacer(),
-        // Cart Toggle Button with Badge
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            IconButton(
-              icon: Icon(isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined),
-              onPressed: () => setState(() => isCartVisible = !isCartVisible),
-            ),
-            // Only show the badge if there are items in the cart
-            if (totalItems > 0)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '$totalItems',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            backgroundColor: Colors.black12, 
+            child: Icon(Icons.person, color: Colors.black)
+          ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Welcome Asad!", 
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              Text("Store Admin", 
+                  style: TextStyle(fontSize: 12, color: Colors.black45)),
+            ],
+          ),
+          const Spacer(),
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              IconButton(
+                icon: Icon(isCartVisible 
+                    ? Icons.visibility_off_outlined 
+                    : Icons.shopping_cart_outlined),
+                onPressed: () => setState(() => isCartVisible = !isCartVisible),
+              ),
+              if (totalItems > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    textAlign: TextAlign.center,
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      '$totalItems',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Footer Section (Reduced Height + Orange/Black Theme)
+  Widget _buildFooter() {
+    final List<String> actions = [
+      "Open", "Close", "Re-print", "Hold", "Unhold", "New", "Change Rate", "Change Qty"
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12), // Compact Padding
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.05), width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                "Quick Actions",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
               ),
-          ],
+              const SizedBox(width: 4),
+              const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(actions.length, (index) {
+                return _buildFooterButton(
+                  actions[index], 
+                  index: index,
+                  isActive: _activeFooterIndex == index,
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooterButton(String label, {required int index, bool isActive = false}) {
+  return Padding(
+    padding: const EdgeInsets.only(right: 8.0),
+    child: SizedBox(
+      height: 36, 
+      child: OutlinedButton(
+        onPressed: () => setState(() => _activeFooterIndex = index),
+        style: OutlinedButton.styleFrom(
+          // Active: Orange | Inactive: Black
+          backgroundColor: isActive ? Colors.orange : Colors.black,
+          
+          // Border matches the background for a clean solid look
+          side: BorderSide(
+            color: isActive ? Colors.orange : Colors.black, 
+            width: 1
+          ),
+          
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6)
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
-      ],
+        child: Text(
+          label,
+          style: TextStyle(
+            // Both states use white text for contrast against dark backgrounds
+            color: Colors.white,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
     ),
   );
 }
 
+  /// Sidebar Navigation
   Widget _buildSidebar() {
     return Container(
       width: 100,
@@ -198,7 +294,10 @@ Widget _buildHeader() {
         if (isLogout) {
           ref.read(authProvider.notifier).state = false;
         } else {
-          setState(() { _currentIndex = index; selectedProduct = null; });
+          setState(() { 
+            _currentIndex = index; 
+            selectedProduct = null; 
+          });
         }
       },
       child: Container(
