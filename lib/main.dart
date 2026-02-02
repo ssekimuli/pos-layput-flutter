@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 
-// Ensure these paths match your project structure
 import 'package:pos_desktop_ui/features/auth/presentation/providers/auth_provider.dart';
 import 'package:pos_desktop_ui/features/auth/presentation/screens/login_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/pos_layout.dart';
@@ -18,7 +17,7 @@ void main() {
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
     appWindow.title = "POS Desktop System";
-    appWindow.show(); // Required because of BDW_HIDE_ON_STARTUP
+    appWindow.show(); 
   });
 }
 

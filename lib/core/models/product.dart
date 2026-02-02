@@ -7,6 +7,7 @@ class Product {
   final int? quantity;
   final double? price; // Add price field
   final Color? color; // Add color field
+  
 
   Product({required this.id, required this.name, this.quantity, required this.price, required this.color});
 
