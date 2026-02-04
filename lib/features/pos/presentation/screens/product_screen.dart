@@ -32,6 +32,7 @@ class _ProductScreenState extends State<ProductScreen> {
         const SizedBox(height: 16), // Added space after tabs
         Expanded(child: _buildProductGrid()),
       ],
+      
     );
   }
 
@@ -66,7 +67,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
   Widget _buildCategoryTabs() {
     return SizedBox(
-      height: 36, // Compact height
+      height: 36,
       child: ScrollConfiguration(
         // Enables mouse dragging for desktop users
         behavior: ScrollConfiguration.of(context).copyWith(

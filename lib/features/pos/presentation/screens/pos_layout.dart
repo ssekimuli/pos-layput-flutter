@@ -143,38 +143,50 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
           ),
           const Spacer(),
           Stack(
-            alignment: Alignment.topRight,
-            children: [
-              IconButton(
-                icon: Icon(isCartVisible 
-                    ? Icons.visibility_off_outlined 
-                    : Icons.shopping_cart_outlined),
-                onPressed: () => setState(() => isCartVisible = !isCartVisible),
+  alignment: Alignment.topRight,
+  children: [
+    // The main button that toggles the state
+    IconButton(
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        transitionBuilder: (Widget child, Animation<double> animation) {
+          return ScaleTransition(scale: animation, child: child);
+        },
+        child: Icon(
+          isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined,
+          key: ValueKey<bool>(isCartVisible), // Required for AnimatedSwitcher to work
+        ),
+      ),
+      onPressed: () => setState(() => isCartVisible = !isCartVisible),
+    ),
+
+    // The Badge - only show if items exist AND cart isn't "hidden"
+    if (totalItems > 0 && !isCartVisible)
+      Positioned(
+        right: 4, // Adjusted for better alignment
+        top: 4,
+        child: IgnorePointer( // Prevents the badge from blocking the button click
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: const BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle, // Cleaner than manual border radius
+            ),
+            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+            child: Text(
+              '$totalItems',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
-              if (totalItems > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      '$totalItems',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
+              textAlign: TextAlign.center,
+            ),
           ),
+        ),
+      ),
+  ],
+)
         ],
       ),
     );
