@@ -338,4 +338,5 @@ class _StockScreenState extends State<StockScreen> {
     decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
     child: IconButton(icon: Icon(icon, size: 20), onPressed: () {}),
   );
+  
 }
