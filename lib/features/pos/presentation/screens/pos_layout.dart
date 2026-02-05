@@ -26,7 +26,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   
   // UI State
   int _currentIndex = 0;
-  int _activeFooterIndex = 0; // Tracks which footer button is orange
+  int _activeFooterIndex = 0;
   Product? selectedProduct;
   bool isCartVisible = false;
 
