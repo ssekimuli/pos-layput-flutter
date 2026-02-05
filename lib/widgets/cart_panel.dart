@@ -258,6 +258,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
   void _showClearDialog() {
     // Implement clear cart logic here
   }
+  
 
   Widget _buildEmptyState() => const Center(
     child: Column(

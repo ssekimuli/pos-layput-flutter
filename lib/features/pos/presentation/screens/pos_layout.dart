@@ -26,7 +26,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   
   // UI State
   int _currentIndex = 0;
-  int _activeFooterIndex = 0;
+  int _activeFooterIndex = 0; // Tracks which footer button is orange
   Product? selectedProduct;
   bool isCartVisible = false;
 
@@ -135,6 +135,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              
               Text("Welcome Asad!", 
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               Text("Store Admin", 
