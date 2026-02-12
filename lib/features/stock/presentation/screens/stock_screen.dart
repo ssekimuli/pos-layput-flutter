@@ -17,18 +17,21 @@ class _StockScreenState extends State<StockScreen> {
   final TextEditingController _skuController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
-  
+  String? _selectedCategory;
+
   bool _isEditing = false;
   int? _editingIndex;
 
   // Mock Data Source
   final List<Map<String, dynamic>> _inventory = List.generate(15, (index) => {
-    "name": "Product ${index + 1}",
-    "sku": "SKU-882$index",
-    "category": "Beverages",
-    "stock": index + 5,
-    "price": (index + 5.99).toStringAsFixed(2),
-  });
+        "name": "Product ${index + 1}",
+        "sku": "SKU-882$index",
+        "category": "Beverages",
+        "stock": index + 5,
+        "price": (index + 5.99).toStringAsFixed(2),
+      });
+
+  final List<String> _categories = ["Beverages", "Food", "Snacks", "Electronics"];
 
   // Open Side Sheet for Add or Edit
   void _openProductForm({Map<String, dynamic>? product, int? index}) {
@@ -40,6 +43,7 @@ class _StockScreenState extends State<StockScreen> {
         _skuController.text = product['sku'];
         _priceController.text = product['price'];
         _stockController.text = product['stock'].toString();
+        _selectedCategory = product['category'];
       } else {
         _isEditing = false;
         _editingIndex = null;
@@ -47,6 +51,7 @@ class _StockScreenState extends State<StockScreen> {
         _skuController.clear();
         _priceController.clear();
         _stockController.clear();
+        _selectedCategory = null;
       }
     });
     _scaffoldKey.currentState!.openEndDrawer();
@@ -72,8 +77,6 @@ class _StockScreenState extends State<StockScreen> {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 20),
-                _buildSummaryCards(),
-                const SizedBox(height: 20),
                 _buildActionBar(),
                 const SizedBox(height: 12),
                 Expanded(child: _buildTableContainer()),
@@ -87,37 +90,50 @@ class _StockScreenState extends State<StockScreen> {
 
   // --- HEADER ---
   Widget _buildHeader() {
-    return Row(
-      children: [
-        const Icon(Icons.inventory_2_rounded, color: Color(0xFF006070), size: 28),
-        const SizedBox(width: 12),
-        const Text("Stock Management", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-        const Spacer(),
-        ElevatedButton.icon(
-          onPressed: () => _openProductForm(),
-          icon: const Icon(Icons.add, size: 16),
-          label: const Text("Add New Product"),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.inventory_2_rounded, color: Color(0xFF006070), size: 28),
+              const SizedBox(width: 12),
+              const Text("Stock Management",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const Spacer(),
+              ElevatedButton.icon(
+                onPressed: () => _openProductForm(),
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text("Add New Product"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
           ),
-        ),
-      ],
-    );
-  }
-
-  // --- SUMMARY CARDS ---
-  Widget _buildSummaryCards() {
-    return Row(
-      children: [
-        _statCard("Total Categories", "12", Colors.blue),
-        const SizedBox(width: 12),
-        _statCard("Low Stock Items", "8", Colors.orange),
-        const SizedBox(width: 12),
-        _statCard("Out of Stock", "2", Colors.red),
-      ],
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              _statCard("Total Categories", "12", Colors.blue),
+              const SizedBox(width: 12),
+              _statCard("Low Stock Items", "8", Colors.orange),
+              const SizedBox(width: 12),
+              _statCard("Out of Stock", "2", Colors.red),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -137,15 +153,17 @@ class _StockScreenState extends State<StockScreen> {
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: EdgeInsets.zero,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none),
               ),
             ),
           ),
         ),
         const SizedBox(width: 12),
-        _iconBtn(Icons.filter_list_rounded),
+        _iconBtn(Icons.filter_list_rounded, "Filter"),
         const SizedBox(width: 8),
-        _iconBtn(Icons.file_download_outlined),
+        _iconBtn(Icons.file_download_outlined, "Download"),
       ],
     );
   }
@@ -167,7 +185,16 @@ class _StockScreenState extends State<StockScreen> {
               constraints: const BoxConstraints(minWidth: 1000),
               child: DataTable(
                 headingRowHeight: 50,
-                headingRowColor: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                headingRowColor:
+                    WidgetStateProperty.all(const Color(0xFFF8FAFC)),
+                dataRowColor: WidgetStateProperty.resolveWith<Color?>(
+                  (Set<WidgetState> states) {
+                    if (states.contains(WidgetState.hovered)) {
+                      return Colors.grey.shade100;
+                    }
+                    return null; // Use default
+                  },
+                ),
                 columns: const [
                   DataColumn(label: Text('Product Name')),
                   DataColumn(label: Text('SKU')),
@@ -180,7 +207,8 @@ class _StockScreenState extends State<StockScreen> {
                   int idx = entry.key;
                   Map<String, dynamic> item = entry.value;
                   return DataRow(cells: [
-                    DataCell(Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold))),
+                    DataCell(Text(item['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold))),
                     DataCell(Text(item['sku'])),
                     DataCell(Text(item['category'])),
                     DataCell(_buildStockBadge(item['stock'])),
@@ -189,11 +217,14 @@ class _StockScreenState extends State<StockScreen> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_outlined, size: 18),
-                          onPressed: () => _openProductForm(product: item, index: idx),
+                          onPressed: () =>
+                              _openProductForm(product: item, index: idx),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                          onPressed: () => setState(() => _inventory.removeAt(idx)),
+                          icon: const Icon(Icons.delete_outline,
+                              size: 18, color: Colors.red),
+                          onPressed: () =>
+                              setState(() => _inventory.removeAt(idx)),
                         ),
                       ],
                     )),
@@ -220,8 +251,11 @@ class _StockScreenState extends State<StockScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_isEditing ? "Update Product" : "New Product",
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                    style:
+                        const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close)),
               ],
             ),
             const SizedBox(height: 30),
@@ -231,46 +265,72 @@ class _StockScreenState extends State<StockScreen> {
             _inputLabel("SKU Code"),
             _textInput(_skuController, "Enter SKU"),
             const SizedBox(height: 20),
+            _inputLabel("Category"),
+            _categoryDropdown(),
+            const SizedBox(height: 20),
             Row(
               children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _inputLabel("Price"),
-                  _textInput(_priceController, "0.00", isNum: true),
-                ])),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      _inputLabel("Price"),
+                      _textInput(_priceController, "0.00", isNum: true),
+                    ])),
                 const SizedBox(width: 16),
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  _inputLabel("Stock"),
-                  _textInput(_stockController, "0", isNum: true),
-                ])),
+                Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      _inputLabel("Stock"),
+                      _textInput(_stockController, "0", isNum: true),
+                    ])),
               ],
             ),
             const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.black, foregroundColor: Colors.white),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    setState(() {
-                      final data = {
-                        "name": _nameController.text,
-                        "sku": _skuController.text,
-                        "category": "General",
-                        "stock": int.parse(_stockController.text),
-                        "price": _priceController.text,
-                      };
-                      if (_isEditing) {
-                        _inventory[_editingIndex!] = data;
-                      } else {
-                        _inventory.add(data);
-                      }
-                    });
-                    Navigator.pop(context);
-                  }
-                },
-                child: Text(_isEditing ? "Update Stock" : "Create Product"),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: SizedBox(
+                    height: 50,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white),
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            final data = {
+                              "name": _nameController.text,
+                              "sku": _skuController.text,
+                              "category": _selectedCategory,
+                              "stock": int.parse(_stockController.text),
+                              "price": _priceController.text,
+                            };
+                            if (_isEditing) {
+                              _inventory[_editingIndex!] = data;
+                            } else {
+                              _inventory.add(data);
+                            }
+                          });
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(_isEditing ? "Update Stock" : "Create Product"),
+                    ),
+                  ),
+                ),
+              ],
             )
           ],
         ),
@@ -293,7 +353,8 @@ class _StockScreenState extends State<StockScreen> {
           children: [
             Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(value,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -310,15 +371,18 @@ class _StockScreenState extends State<StockScreen> {
       ),
       child: Text(
         "$stock pcs",
-        style: TextStyle(color: isLow ? Colors.red : Colors.green, fontSize: 12, fontWeight: FontWeight.bold),
+        style: TextStyle(
+            color: isLow ? Colors.red : Colors.green,
+            fontSize: 12,
+            fontWeight: FontWeight.bold),
       ),
     );
   }
 
   Widget _inputLabel(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-  );
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+      );
 
   Widget _textInput(TextEditingController ctrl, String hint, {bool isNum = false}) {
     return TextFormField(
@@ -328,15 +392,42 @@ class _StockScreenState extends State<StockScreen> {
         hintText: hint,
         filled: true,
         fillColor: Colors.grey.shade50,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
       ),
       validator: (v) => v!.isEmpty ? "Required" : null,
     );
   }
 
-  Widget _iconBtn(IconData icon) => Container(
-    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade200)),
-    child: IconButton(icon: Icon(icon, size: 20), onPressed: () {}),
-  );
-  
+  Widget _categoryDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedCategory,
+      hint: const Text("Select Category"),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+      ),
+      items: _categories
+          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+          .toList(),
+      onChanged: (v) => setState(() => _selectedCategory = v),
+      validator: (v) => v == null ? "Required" : null,
+    );
+  }
+
+  Widget _iconBtn(IconData icon, String label) => TextButton.icon(
+        onPressed: () {},
+        icon: Icon(icon, size: 20),
+        label: Text(label),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.grey.shade700,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+              side: BorderSide(color: Colors.grey.shade200)),
+          backgroundColor: Colors.white,
+        ),
+      );
 }

@@ -3,12 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_desktop_ui/core/models/product.dart';
 import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
 import 'package:pos_desktop_ui/core/providers/product_provider.dart';
+import 'package:pos_desktop_ui/features/accounting/presentation/screens/accounting_screen.dart';
 import 'package:pos_desktop_ui/features/auth/presentation/providers/auth_provider.dart';
+import 'package:pos_desktop_ui/features/customers/presentation/screens/customers_screen.dart';
+import 'package:pos_desktop_ui/features/department/presentation/screens/department_screen.dart';
+import 'package:pos_desktop_ui/features/expense/presentation/screens/expense_screen.dart';
+import 'package:pos_desktop_ui/features/hrm/presentation/screens/hrm_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart';
-import 'package:pos_desktop_ui/features/reports/presentation/screens/reports_screen.dart';
+import 'package:pos_desktop_ui/features/report/presentation/screens/report_screen.dart';
+import 'package:pos_desktop_ui/features/sale/presentation/screens/sale_screen.dart';
 import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
 import 'package:pos_desktop_ui/features/stock/presentation/screens/stock_screen.dart';
+import 'package:pos_desktop_ui/features/store/presentation/screens/store_screen.dart';
+import 'package:pos_desktop_ui/features/suppliers/presentation/screens/suppliers_screen.dart';
 import 'package:pos_desktop_ui/widgets/cart_panel.dart';
 
 class POSLayout extends ConsumerStatefulWidget {
@@ -23,7 +31,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   final Color sidebarTeal = Colors.orange;
   final Color accentYellow = const Color(0xFFFFCC4D);
   final Color workspaceBg = const Color(0xFFF4F7F9);
-  
+
   // UI State
   int _currentIndex = 0;
   int _activeFooterIndex = 0; // Tracks which footer button is orange
@@ -58,21 +66,15 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                         children: [
                           _buildHeader(),
                           Expanded(child: activeContent),
-                          _buildFooter(), 
+                          _buildFooter(),
                         ],
                       ),
                     ),
                     // Right Cart Panel
                     if (isCartVisible) ...[
                       const VerticalDivider(
-                        width: 1, 
-                        thickness: 1, 
-                        color: Colors.black12
-                      ),
-                      const Expanded(
-                        flex: 1, 
-                        child: CartPanel()
-                      ),
+                          width: 1, thickness: 1, color: Colors.black12),
+                      const Expanded(flex: 1, child: CartPanel()),
                     ],
                   ],
                 ),
@@ -91,7 +93,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Detail for ${selectedProduct!.name}", 
+            Text("Detail for ${selectedProduct!.name}",
                 style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 20),
             ElevatedButton(
@@ -107,87 +109,115 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       case 0:
         return ProductScreen(
           products: products,
-          onProductSelected: (p) => ref.read(cartProvider.notifier).addProduct(p),
+          onProductSelected: (p) =>
+              ref.read(cartProvider.notifier).addProduct(p),
           onActionSelected: (index) => setState(() => _currentIndex = index),
         );
-      case 2: return const OpenDrawer();
-      case 3: return ReportsScreen();
-      case 5: return StockScreen();
-      case 6: return const SettingScreen();
-      default: return Center(child: Text("Module $_currentIndex Coming Soon"));
+      case 1:
+        return const SaleScreen();
+      case 2:
+        return const StockScreen();
+      case 3:
+        return const StoreScreen();
+      case 4:
+        return const SuppliersScreen();
+      case 5:
+        return const ReportScreen();
+      case 6:
+        return const SettingScreen();
+      case 7:
+        return const OpenDrawer();
+      case 8:
+        return const ExpenseScreen();
+      case 9:
+        return const CustomersScreen();
+      case 10:
+        return const HrmScreen();
+      case 11:
+        return const AccountingScreen();
+      case 12:
+        return const DepartmentScreen();
+
+      default:
+        return Center(child: Text("Module $_currentIndex Coming Soon"));
     }
   }
 
   /// Top Navigation Bar
   Widget _buildHeader() {
     final cartItems = ref.watch(cartProvider);
-    final totalItems = cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
+    final totalItems =
+        cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
       child: Row(
         children: [
           const CircleAvatar(
-            backgroundColor: Colors.black12, 
-            child: Icon(Icons.person, color: Colors.black)
-          ),
+              backgroundColor: Colors.black12,
+              child: Icon(Icons.person, color: Colors.black)),
           const SizedBox(width: 12),
           const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
-              Text("Welcome Asad!", 
+              Text("Welcome Asad!",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              Text("Store Admin", 
+              Text("Store Admin",
                   style: TextStyle(fontSize: 12, color: Colors.black45)),
             ],
           ),
           const Spacer(),
           Stack(
-  alignment: Alignment.topRight,
-  children: [
-    // The main button that toggles the state
-    IconButton(
-      icon: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        transitionBuilder: (Widget child, Animation<double> animation) {
-          return ScaleTransition(scale: animation, child: child);
-        },
-        child: Icon(
-          isCartVisible ? Icons.visibility_off_outlined : Icons.shopping_cart_outlined,
-          key: ValueKey<bool>(isCartVisible), // Required for AnimatedSwitcher to work
-        ),
-      ),
-      onPressed: () => setState(() => isCartVisible = !isCartVisible),
-    ),
-
-    // The Badge - only show if items exist AND cart isn't "hidden"
-    if (totalItems > 0 && !isCartVisible)
-      Positioned(
-        right: 4, // Adjusted for better alignment
-        top: 4,
-        child: IgnorePointer( // Prevents the badge from blocking the button click
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle, // Cleaner than manual border radius
-            ),
-            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-            child: Text(
-              '$totalItems',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
+            alignment: Alignment.topRight,
+            children: [
+              // The main button that toggles the state
+              IconButton(
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                    return ScaleTransition(scale: animation, child: child);
+                  },
+                  child: Icon(
+                    isCartVisible
+                        ? Icons.visibility_off_outlined
+                        : Icons.shopping_cart_outlined,
+                    key: ValueKey<bool>(
+                        isCartVisible), // Required for AnimatedSwitcher to work
+                  ),
+                ),
+                onPressed: () => setState(() => isCartVisible = !isCartVisible),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      ),
-  ],
-)
+
+              // The Badge - only show if items exist AND cart isn't "hidden"
+              if (totalItems > 0 && !isCartVisible)
+                Positioned(
+                  right: 4, // Adjusted for better alignment
+                  top: 4,
+                  child: IgnorePointer(
+                    // Prevents the badge from blocking the button click
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle, // Cleaner than manual border radius
+                      ),
+                      constraints:
+                          const BoxConstraints(minWidth: 18, minHeight: 18),
+                      child: Text(
+                        '$totalItems',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          )
         ],
       ),
     );
@@ -196,14 +226,23 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   /// Footer Section (Reduced Height + Orange/Black Theme)
   Widget _buildFooter() {
     final List<String> actions = [
-      "Open", "Close", "Re-print", "Hold", "Unhold", "New", "Change Rate", "Change Qty"
+      "Open",
+      "Close",
+      "Re-print",
+      "Hold",
+      "Unhold",
+      "New",
+      "Change Rate",
+      "Change Qty"
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12), // Compact Padding
+      padding:
+          const EdgeInsets.fromLTRB(24, 8, 24, 12), // Compact Padding
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.05), width: 1)),
+        border: Border(
+            top: BorderSide(color: Colors.black.withOpacity(0.05), width: 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,7 +258,8 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
+              const Icon(Icons.keyboard_arrow_down,
+                  size: 16, color: Colors.black54),
             ],
           ),
           const SizedBox(height: 8),
@@ -228,7 +268,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
             child: Row(
               children: List.generate(actions.length, (index) {
                 return _buildFooterButton(
-                  actions[index], 
+                  actions[index],
                   index: index,
                   isActive: _activeFooterIndex == index,
                 );
@@ -240,41 +280,39 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     );
   }
 
-  Widget _buildFooterButton(String label, {required int index, bool isActive = false}) {
-  return Padding(
-    padding: const EdgeInsets.only(right: 8.0),
-    child: SizedBox(
-      height: 36, 
-      child: OutlinedButton(
-        onPressed: () => setState(() => _activeFooterIndex = index),
-        style: OutlinedButton.styleFrom(
-          // Active: Orange | Inactive: Black
-          backgroundColor: isActive ? Colors.orange : Colors.black,
-          
-          // Border matches the background for a clean solid look
-          side: BorderSide(
-            color: isActive ? Colors.orange : Colors.black, 
-            width: 1
+  Widget _buildFooterButton(String label,
+      {required int index, bool isActive = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: SizedBox(
+        height: 36,
+        child: OutlinedButton(
+          onPressed: () => setState(() => _activeFooterIndex = index),
+          style: OutlinedButton.styleFrom(
+            // Active: Orange | Inactive: Black
+            backgroundColor: isActive ? Colors.orange : Colors.black,
+
+            // Border matches the background for a clean solid look
+            side: BorderSide(
+                color: isActive ? Colors.orange : Colors.black, width: 1),
+
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
           ),
-          
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6)
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            // Both states use white text for contrast against dark backgrounds
-            color: Colors.white,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            fontSize: 12,
+          child: Text(
+            label,
+            style: TextStyle(
+              // Both states use white text for contrast against dark backgrounds
+              color: Colors.white,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              fontSize: 12,
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   /// Sidebar Navigation
   Widget _buildSidebar() {
@@ -287,29 +325,32 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Icon(Icons.blur_on, color: Colors.white, size: 40),
           ),
-          _sidebarItem(0, Icons.payment, "Payment"),
-          _sidebarItem(2, Icons.receipt, "Receipt"),
-          _sidebarItem(3, Icons.bar_chart, "Reports"),
-          _sidebarItem(5, Icons.inventory_2, "Stock"),
+          _sidebarItem(0, Icons.payment, "POS"),
+          _sidebarItem(1, Icons.point_of_sale, "Sale"),
+          _sidebarItem(2, Icons.inventory_2, "Stock"),
+          _sidebarItem(3, Icons.store, "Store"),
+          _sidebarItem(4, Icons.group, "Suppliers"),
+          _sidebarItem(5, Icons.bar_chart, "Report"),
           const Spacer(),
           _sidebarItem(6, Icons.settings, "Settings"),
-          _sidebarItem(7, Icons.logout, "Logout", isLogout: true),
+          _sidebarItem(13, Icons.logout, "Logout", isLogout: true),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _sidebarItem(int index, IconData icon, String label, {bool isLogout = false}) {
+  Widget _sidebarItem(int index, IconData icon, String label,
+      {bool isLogout = false}) {
     bool isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
         if (isLogout) {
           ref.read(authProvider.notifier).state = false;
         } else {
-          setState(() { 
-            _currentIndex = index; 
-            selectedProduct = null; 
+          setState(() {
+            _currentIndex = index;
+            selectedProduct = null;
           });
         }
       },
@@ -323,13 +364,16 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? Colors.black : Colors.white70, size: 20),
+            Icon(icon,
+                color: isSelected ? Colors.black : Colors.white70, size: 20),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(
-              color: isSelected ? Colors.black : Colors.white70,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            )),
+            Text(label,
+                style: TextStyle(
+                  color: isSelected ? Colors.black : Colors.white70,
+                  fontSize: 10,
+                  fontWeight:
+                      isSelected ? FontWeight.bold : FontWeight.normal,
+                )),
           ],
         ),
       ),
