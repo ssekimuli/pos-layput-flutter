@@ -28,7 +28,6 @@ class POSLayout extends ConsumerStatefulWidget {
 
 class _POSLayoutState extends ConsumerState<POSLayout> {
   /// Theme Colors
-  final Color sidebarTeal = Colors.orange;
   final Color accentYellow = const Color(0xFFFFCC4D);
   final Color workspaceBg = const Color(0xFFF4F7F9);
 
@@ -44,12 +43,10 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
     Widget activeContent = _buildActiveContent(products);
 
     return Scaffold(
-      backgroundColor: sidebarTeal,
+      backgroundColor: Colors.orange,
       body: Row(
         children: [
           _buildSidebar(),
-
-          /// Workspace
           Expanded(
             child: Container(
               margin: const EdgeInsets.fromLTRB(0, 16, 16, 16),
@@ -67,11 +64,10 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                         children: [
                           _buildHeader(),
                           Expanded(child: activeContent),
-                          _buildFooter(),
+                          _buildFooter(), // footer placed correctly
                         ],
                       ),
                     ),
-
                     if (isCartVisible) ...[
                       const VerticalDivider(
                           width: 1, thickness: 1, color: Colors.black12),
@@ -95,8 +91,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
           products: products,
           onProductSelected: (p) =>
               ref.read(cartProvider.notifier).addProduct(p),
-          onActionSelected: (index) =>
-              setState(() => _currentIndex = index),
+          onActionSelected: (index) => setState(() => _currentIndex = index),
         );
       case 1:
         return const SaleScreen();
@@ -123,8 +118,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       case 12:
         return const DepartmentScreen();
       default:
-        return Center(
-            child: Text("Module $_currentIndex Coming Soon"));
+        return Center(child: Text("Module $_currentIndex Coming Soon"));
     }
   }
 
@@ -139,12 +133,10 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       child: Row(
         children: [
           const CircleAvatar(
-              backgroundColor: Colors.black12,
-              child: Icon(Icons.person)),
+              backgroundColor: Colors.black12, child: Icon(Icons.person)),
           const SizedBox(width: 12),
           const Text("Welcome Admin",
-              style:
-                  TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const Spacer(),
           Stack(
             children: [
@@ -152,8 +144,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                 icon: Icon(isCartVisible
                     ? Icons.visibility_off
                     : Icons.shopping_cart),
-                onPressed: () =>
-                    setState(() => isCartVisible = !isCartVisible),
+                onPressed: () => setState(() => isCartVisible = !isCartVisible),
               ),
               if (totalItems > 0 && !isCartVisible)
                 Positioned(
@@ -164,8 +155,8 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
                     decoration: const BoxDecoration(
                         color: Colors.red, shape: BoxShape.circle),
                     child: Text('$totalItems',
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 10)),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 10)),
                   ),
                 )
             ],
@@ -193,8 +184,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       child: Row(
         children: List.generate(actions.length, (index) {
           return _buildFooterButton(actions[index],
-              index: index,
-              isActive: _activeFooterIndex == index);
+              index: index, isActive: _activeFooterIndex == index);
         }),
       ),
     );
@@ -203,113 +193,110 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   Widget _buildFooterButton(String label,
       {required int index, bool isActive = false}) {
     return Padding(
-      padding: const EdgeInsets.all(6),
-      child: OutlinedButton(
-        onPressed: () =>
-            setState(() => _activeFooterIndex = index),
-        style: OutlinedButton.styleFrom(
-          backgroundColor:
-              isActive ? Colors.orange : Colors.black,
+      padding: const EdgeInsets.only(right: 8.0),
+      child: SizedBox(
+        height: 36,
+        child: OutlinedButton(
+          onPressed: () => setState(() => _activeFooterIndex = index),
+          style: OutlinedButton.styleFrom(
+            backgroundColor: isActive ? Colors.orange : Colors.black,
+            side: BorderSide(
+                color: isActive ? Colors.orange : Colors.black, width: 1),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                fontSize: 12),
+          ),
         ),
-        child:
-            Text(label, style: const TextStyle(color: Colors.white)),
       ),
     );
   }
-/// ✅ SCROLLABLE SIDEBAR WITH RECTANGLE BUTTONS
-Widget _buildSidebar() {
-  return Container(
-    width: 100,
-    color: Colors.black, // sidebar background black
-    child: Column(
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(vertical: 24),
-          child: Icon(Icons.blur_on, color: Colors.white, size: 40),
-        ),
 
-        /// Scrollable Menu
-        Expanded(
-          child: Scrollbar(
-            thumbVisibility: true,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              children: [
-                _sidebarItem(0, Icons.payment, "POS"),
-                _sidebarItem(1, Icons.point_of_sale, "Sale"),
-                _sidebarItem(2, Icons.inventory_2, "Stock"),
-                _sidebarItem(3, Icons.store, "Store"),
-                _sidebarItem(4, Icons.group, "Suppliers"),
-                _sidebarItem(5, Icons.bar_chart, "Report"),
-                _sidebarItem(7, Icons.receipt, "Drawer"),
-                _sidebarItem(8, Icons.money_off, "Expense"),
-                _sidebarItem(9, Icons.people, "Customers"),
-                _sidebarItem(10, Icons.badge, "HRM"),
-                _sidebarItem(11, Icons.account_balance, "Accounting"),
-                _sidebarItem(12, Icons.apartment, "Department"),
-               _sidebarItem(6, Icons.settings, "Settings"),
-
-              ],
-            ),
-          ),
-        ),
-
-        _sidebarItem(13, Icons.logout, "Logout", isLogout: true),
-        const SizedBox(height: 20),
-      ],
-    ),
-  );
-}
-
-Widget _sidebarItem(int index, IconData icon, String label,
-    {bool isLogout = false}) {
-  bool isSelected = _currentIndex == index;
-
-  return GestureDetector(
-    onTap: () {
-      if (isLogout) {
-        ref.read(authProvider.notifier).state = false;
-      } else {
-        setState(() {
-          _currentIndex = index;
-          selectedProduct = null;
-        });
-      }
-    },
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-
-      /// Space outside
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 0),
-
-      /// Space inside
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.orange : Colors.transparent,
-        borderRadius: BorderRadius.zero, // rectangle buttons
-      ),
-
+  /// Sidebar
+  Widget _buildSidebar() {
+    return Container(
+      width: 100,
+      color: Colors.black, // sidebar background
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.black : Colors.white70,
-            size: 22,
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Icon(Icons.blur_on, color: Colors.white, size: 40),
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.black : Colors.white70,
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          Expanded(
+            child: Scrollbar(
+              thumbVisibility: true,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                children: [
+                  _sidebarItem(0, Icons.payment, "POS"),
+                  _sidebarItem(1, Icons.point_of_sale, "Sale"),
+                  _sidebarItem(2, Icons.inventory_2, "Stock"),
+                  _sidebarItem(3, Icons.store, "Store"),
+                  _sidebarItem(4, Icons.group, "Suppliers"),
+                  _sidebarItem(5, Icons.bar_chart, "Report"),
+                  _sidebarItem(7, Icons.receipt, "Drawer"),
+                  _sidebarItem(8, Icons.money_off, "Expense"),
+                  _sidebarItem(9, Icons.people, "Customers"),
+                  _sidebarItem(10, Icons.badge, "HRM"),
+                  _sidebarItem(11, Icons.account_balance, "Accounting"),
+                  _sidebarItem(12, Icons.apartment, "Department"),
+                  _sidebarItem(6, Icons.settings, "Settings"),
+                ],
+              ),
             ),
           ),
+          _sidebarItem(13, Icons.logout, "Logout", isLogout: true),
+          const SizedBox(height: 20),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
+
+  Widget _sidebarItem(int index, IconData icon, String label,
+      {bool isLogout = false}) {
+    bool isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        if (isLogout) {
+          ref.read(authProvider.notifier).state = false;
+        } else {
+          setState(() {
+            _currentIndex = index;
+            selectedProduct = null;
+          });
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 0),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.orange : Colors.transparent,
+          borderRadius: BorderRadius.zero, // rectangle buttons
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? Colors.black : Colors.white70, size: 22),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : Colors.white70,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
