@@ -168,24 +168,47 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
 
   /// Footer
   Widget _buildFooter() {
-    final actions = [
-      "Open",
-      "Close",
-      "Re-print",
-      "Hold",
-      "Unhold",
-      "New",
-      "Change Rate",
-      "Change Qty"
+    final List<String> actions = [
+      "Open", "Close", "Re-print", "Hold", "Unhold", "New", "Change Rate", "Change Qty"
     ];
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(actions.length, (index) {
-          return _buildFooterButton(actions[index],
-              index: index, isActive: _activeFooterIndex == index);
-        }),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 12), // Compact Padding
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.05), width: 1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                "Quick Actions",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(actions.length, (index) {
+                return _buildFooterButton(
+                  actions[index], 
+                  index: index,
+                  isActive: _activeFooterIndex == index,
+                );
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
