@@ -10,6 +10,7 @@ import 'package:pos_desktop_ui/features/department/presentation/screens/departme
 import 'package:pos_desktop_ui/features/expense/presentation/screens/expense_screen.dart';
 import 'package:pos_desktop_ui/features/hrm/presentation/screens/hrm_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/hotel_screen.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/order_management_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/restaurant_screen.dart';
@@ -34,11 +35,19 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   final Color workspaceBg = const Color(0xFFF4F7F9);
 
   /// UI State
-  int _currentIndex = 0;
+  int _currentIndex = 13;
   int _activeFooterIndex = 0;
   Product? selectedProduct;
   bool isCartVisible = false;
   int? _hoveredIndex;
+
+  final ScrollController _sidebarController = ScrollController();
+
+  @override
+  void dispose() {
+    _sidebarController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -112,6 +121,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       case 12: return const DepartmentScreen();
       case 14: return const RestaurantScreen();
       case 15: return const HotelScreen();
+      case 16: return const OrderManagementScreen();
       default:
         return Center(child: Text("Module $_currentIndex Coming Soon"));
     }
@@ -271,6 +281,7 @@ Widget _buildFooter() {
       {'index': 13, 'icon': Icons.dashboard, 'label': "Dashboard"},
       {'index': 0, 'icon': Icons.payment, 'label': "POS"},
       {'index': 1, 'icon': Icons.point_of_sale, 'label': "Sale"},
+      {'index': 16, 'icon': Icons.list_alt, 'label': "Orders"},
       {'index': 14, 'icon': Icons.restaurant, 'label': "Restaurant"},
       {'index': 15, 'icon': Icons.hotel, 'label': "Hotel"},
       {'index': 2, 'icon': Icons.inventory_2, 'label': "Stock"},
@@ -298,8 +309,10 @@ Widget _buildFooter() {
           _buildDivider(),
           Expanded(
             child: Scrollbar(
+              controller: _sidebarController,
               thumbVisibility: true,
               child: ListView.separated(
+                controller: _sidebarController,
                 padding: EdgeInsets.zero,
                 itemCount: menuItems.length,
                 separatorBuilder: (context, index) => _buildDivider(),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
+import 'package:pos_desktop_ui/core/models/product.dart';
 
 class HotelScreen extends ConsumerWidget {
   const HotelScreen({super.key});
@@ -40,6 +41,7 @@ class HotelScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           Expanded(
             child: GridView.builder(
+              primary: true,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
                 childAspectRatio: 1.0,
@@ -78,7 +80,7 @@ class HotelScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _smallBtn("BOOK", Colors.blue, () => _handleBooking(context, ref, room)),
+                          _smallBtn("BOOK", Colors.blue, () => _showBookingForm(context, ref, room)),
                           const SizedBox(width: 8),
                           _smallBtn("SERVICE", Colors.orange, () => _handleRoomService(context, ref, room)),
                         ],
@@ -94,23 +96,71 @@ class HotelScreen extends ConsumerWidget {
     );
   }
 
-  void _handleBooking(BuildContext context, WidgetRef ref, Map<String, dynamic> room) {
-    ref.read(cartProvider.notifier).resetCart(
+  void _showBookingForm(BuildContext context, WidgetRef ref, Map<String, dynamic> room) {
+    final nameController = TextEditingController();
+    final telController = TextEditingController();
+    final idController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Booking Room ${room['number']}"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: nameController, decoration: const InputDecoration(labelText: "Guest Name")),
+            TextField(controller: telController, decoration: const InputDecoration(labelText: "Telephone")),
+            TextField(controller: idController, decoration: const InputDecoration(labelText: "ID Number")),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              final guestInfo = "Guest: ${nameController.text} | Tel: ${telController.text} | ID: ${idController.text} | Status: PENDING";
+              _handleBooking(context, ref, room, guestInfo);
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            child: const Text("Add to Cart"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleBooking(BuildContext context, WidgetRef ref, Map<String, dynamic> room, String guestInfo) {
+    ref.read(cartProvider.notifier).updateType(
       CartType.hotelBooking,
       targetId: room['number'],
     );
+
+    ref.read(cartProvider.notifier).addProduct(
+      Product(
+        id: 'ROOM-${room['number']}',
+        name: "Room ${room['number']} (${room['type']})",
+        description: guestInfo,
+        price: room['price'],
+        color: Colors.blue.shade100,
+        quantity: 1,
+      ),
+    );
+
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Creating booking for Room ${room['number']}")),
+      SnackBar(
+        content: Text("Room ${room['number']} added to cart (Pending payment)."),
+        backgroundColor: Colors.blue,
+      ),
     );
   }
 
   void _handleRoomService(BuildContext context, WidgetRef ref, Map<String, dynamic> room) {
-    ref.read(cartProvider.notifier).resetCart(
+    ref.read(cartProvider.notifier).updateType(
       CartType.roomService,
       targetId: room['number'],
     );
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Room service for Room ${room['number']}. Select items.")),
+      SnackBar(content: Text("Context set to Room ${room['number']} Service. Add items below.")),
     );
   }
 

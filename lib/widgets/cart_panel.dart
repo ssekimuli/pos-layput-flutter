@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pos_desktop_ui/core/models/product.dart';
 import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
+import 'package:pos_desktop_ui/core/providers/table_provider.dart';
 
 class CartPanel extends ConsumerStatefulWidget {
   const CartPanel({super.key});
@@ -38,6 +40,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
             child: cartItems.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
+                    primary: true,
                     itemCount: cartItems.length,
                     padding: const EdgeInsets.all(12),
                     separatorBuilder: (context, index) => const SizedBox(height: 8),
@@ -124,25 +127,75 @@ class _CartPanelState extends ConsumerState<CartPanel> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(item.name, 
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.name, 
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    if (item.description != null)
+                      Text(item.description!, 
+                        style: TextStyle(color: Colors.blue.shade700, fontSize: 11, fontWeight: FontWeight.w500)),
+                    if (item.specialInstructions != null && item.specialInstructions!.isNotEmpty)
+                      Text("Note: ${item.specialInstructions}", 
+                        style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontStyle: FontStyle.italic)),
+                  ],
+                ),
               ),
-              Text("\$${((item.price ?? 0) * (item.quantity ?? 1)).toStringAsFixed(2)}", 
+              Text("\$${(item.totalUnitPrice * (item.quantity ?? 1)).toStringAsFixed(2)}", 
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Text("\$${item.price}/unit", style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+              InkWell(
+                onTap: () => _showInstructionsDialog(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(4)),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.edit_note, size: 12, color: Colors.blue),
+                      SizedBox(width: 4),
+                      Text("Instructions", style: TextStyle(color: Colors.blue, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ),
               const Spacer(),
               _qtyController(item),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInstructionsDialog(Product item) {
+    final controller = TextEditingController(text: item.specialInstructions);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Instructions for ${item.name}"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "e.g. No salt, Extra spicy..."),
+          maxLines: 2,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          ElevatedButton(
+            onPressed: () {
+              ref.read(cartProvider.notifier).updateProductInstructions(item, controller.text);
+              Navigator.pop(context);
+            },
+            child: const Text("Save"),
           ),
         ],
       ),
@@ -189,6 +242,20 @@ class _CartPanelState extends ConsumerState<CartPanel> {
             ],
           ),
           const SizedBox(height: 20),
+          if (metadata.type == CartType.restaurant || metadata.type == CartType.roomService)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton.icon(
+                  onPressed: () => _sendToKOT(metadata),
+                  icon: const Icon(Icons.print, size: 18),
+                  label: const Text("SEND TO KOT (KITCHEN/BAR)", style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange.shade800, foregroundColor: Colors.white),
+                ),
+              ),
+            ),
           Row(
             children: [
               Expanded(
@@ -237,6 +304,23 @@ class _CartPanelState extends ConsumerState<CartPanel> {
           }, child: const Text("Done"))
         ],
       )
+    );
+  }
+
+  void _sendToKOT(CartMetadata metadata) {
+    final cartState = ref.read(cartProvider);
+    
+    // 1. Save to active orders list
+    ref.read(activeOrdersProvider.notifier).upsertOrder(cartState);
+    
+    // 2. Clear current cart for next customer
+    ref.read(cartProvider.notifier).resetCart(CartType.shop);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("KOT Sent for ${metadata.displayName}. Order is now in 'Orders' screen."),
+        backgroundColor: Colors.orange.shade900,
+      ),
     );
   }
 
