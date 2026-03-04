@@ -9,8 +9,10 @@ import 'package:pos_desktop_ui/features/customers/presentation/screens/customers
 import 'package:pos_desktop_ui/features/department/presentation/screens/department_screen.dart';
 import 'package:pos_desktop_ui/features/expense/presentation/screens/expense_screen.dart';
 import 'package:pos_desktop_ui/features/hrm/presentation/screens/hrm_screen.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/hotel_screen.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/open_drawer.dart';
 import 'package:pos_desktop_ui/features/pos/presentation/screens/product_screen.dart';
+import 'package:pos_desktop_ui/features/pos/presentation/screens/restaurant_screen.dart';
 import 'package:pos_desktop_ui/features/report/presentation/screens/report_screen.dart';
 import 'package:pos_desktop_ui/features/dashboard/dashboard_screen.dart';
 import 'package:pos_desktop_ui/features/settings/presentation/screens/setting_screen.dart';
@@ -87,9 +89,11 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   /// Active Content
   Widget _buildActiveContent(List<Product> products) {
     switch (_currentIndex) {
-      case 0:
-        return const DashboardScreen();
-      case 1: return ProductScreen(
+      case 13:
+        return DashboardScreen(
+          onNavigate: (index) => setState(() => _currentIndex = index),
+        );
+      case 0: return ProductScreen(
           products: products,
           onProductSelected: (p) =>
               ref.read(cartProvider.notifier).addProduct(p),
@@ -106,6 +110,8 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
       case 10: return const HrmScreen();
       case 11: return const AccountingScreen();
       case 12: return const DepartmentScreen();
+      case 14: return const RestaurantScreen();
+      case 15: return const HotelScreen();
       default:
         return Center(child: Text("Module $_currentIndex Coming Soon"));
     }
@@ -114,7 +120,7 @@ class _POSLayoutState extends ConsumerState<POSLayout> {
   /// Header
   Widget _buildHeader() {
     final cartItems = ref.watch(cartProvider);
-    final totalItems = cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 1));
+    final totalItems = cartItems.items.fold(0, (sum, item) => sum + (item.quantity ?? 1));
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -262,8 +268,11 @@ Widget _buildFooter() {
   /// Sidebar with Individual Dividers
   Widget _buildSidebar() {
     final List<Map<String, dynamic>> menuItems = [
+      {'index': 13, 'icon': Icons.dashboard, 'label': "Dashboard"},
       {'index': 0, 'icon': Icons.payment, 'label': "POS"},
       {'index': 1, 'icon': Icons.point_of_sale, 'label': "Sale"},
+      {'index': 14, 'icon': Icons.restaurant, 'label': "Restaurant"},
+      {'index': 15, 'icon': Icons.hotel, 'label': "Hotel"},
       {'index': 2, 'icon': Icons.inventory_2, 'label': "Stock"},
       {'index': 3, 'icon': Icons.store, 'label': "Store"},
       {'index': 4, 'icon': Icons.group, 'label': "Suppliers"},

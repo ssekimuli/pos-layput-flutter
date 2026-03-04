@@ -1,0 +1,68 @@
+{
+  "auth": {
+    "login_response": {
+      "status": "success",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": 1,
+        "username": "admin",
+        "role": "Admin",
+        "permissions": ["*"]
+      }
+    }
+  },
+  "products": [
+    {
+      "id": 1,
+      "name": "Heineken Beer 330ml",
+      "sku": "HKN-001",
+      "barcode": "8712000000019",
+      "category": "Beverages",
+      "cost_price": 1.50,
+      "sale_price": 3.50,
+      "tax_rate": 0.15,
+      "current_stock": 120
+    },
+    {
+      "id": 2,
+      "name": "Beef Burger (Large)",
+      "sku": "FOD-001",
+      "barcode": "FOD001",
+      "category": "Food",
+      "cost_price": 4.00,
+      "sale_price": 12.00,
+      "tax_rate": 0.10,
+      "current_stock": 50
+    }
+  ],
+  "tables": [
+    { "id": 1, "table_number": "T1", "capacity": 4, "status": "available" },
+    { "id": 2, "table_number": "T2", "capacity": 2, "status": "occupied" },
+    { "id": 3, "table_number": "B1", "capacity": 1, "status": "available" }
+  ],
+  "rooms": [
+    { "id": 1, "room_number": "101", "type": "Deluxe", "status": "available", "price": 150.00 },
+    { "id": 2, "room_number": "102", "type": "Standard", "status": "occupied", "price": 100.00 },
+    { "id": 3, "room_number": "201", "type": "Suite", "status": "maintenance", "price": 300.00 }
+  ],
+  "bookings": [
+    {
+      "id": 1,
+      "guest": "John Doe",
+      "room_number": "102",
+      "check_in": "2026-03-01",
+      "check_out": "2026-03-05",
+      "status": "checked_in",
+      "total_amount": 400.00
+    }
+  ],
+  "reports": {
+    "daily_sales": [
+      { "date": "2026-03-01", "total": 1250.50 },
+      { "date": "2026-03-02", "total": 1400.00 },
+      { "date": "2026-03-03", "total": 1100.25 }
+    ],
+    "inventory_valuation": 25000.75,
+    "total_profit": 5400.00
+  }
+}

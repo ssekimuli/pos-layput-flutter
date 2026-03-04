@@ -16,6 +16,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
+  String _selectedRole = 'Admin';
+  final List<String> _roles = ['Admin', 'Manager', 'Cashier', 'Waiter', 'Receptionist', 'Accountant'];
+
   // 2. ORIGINAL LOGIN FUNCTIONALITY
   void _login() async {
     if (_formKey.currentState!.validate()) {
@@ -107,6 +110,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 30),
 
+                      _buildLabel("Role"),
+                      _buildDropdown(),
+
+                      const SizedBox(height: 20),
                       _buildLabel("Username"),
                       _buildTextField(
                         controller: _usernameController,
@@ -167,6 +174,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.black12,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedRole,
+          dropdownColor: const Color(0xFF1C1E21),
+          style: const TextStyle(color: Colors.white),
+          icon: const Icon(Icons.arrow_drop_down, color: Colors.white38),
+          isExpanded: true,
+          items: _roles.map((String role) {
+            return DropdownMenuItem<String>(
+              value: role,
+              child: Text(role),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedRole = newValue!;
+            });
+          },
+        ),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Assuming your cart_provider has methods for clearCart, etc.
 import 'package:pos_desktop_ui/core/providers/cart_provider.dart';
 
 class CartPanel extends ConsumerStatefulWidget {
@@ -12,17 +11,17 @@ class CartPanel extends ConsumerStatefulWidget {
 
 class _CartPanelState extends ConsumerState<CartPanel> {
   String _selectedPayment = "Cash";
-  final double _taxRate = 0.10; // 10% Tax example
-  final double _discount = 0.00; // Future: add discount logic
+  final double _taxRate = 0.10;
 
   @override
   Widget build(BuildContext context) {
-    final cartItems = ref.watch(cartProvider);
+    final cartState = ref.watch(cartProvider);
+    final cartItems = cartState.items;
+    final metadata = cartState.metadata;
     
-    // Calculations
     double subtotal = cartItems.fold(0, (sum, item) => sum + ((item.price ?? 0) * (item.quantity ?? 1)));
     double taxAmount = subtotal * _taxRate;
-    double finalTotal = subtotal + taxAmount - _discount;
+    double finalTotal = subtotal + taxAmount;
 
     return Container(
       decoration: BoxDecoration(
@@ -31,11 +30,10 @@ class _CartPanelState extends ConsumerState<CartPanel> {
       ),
       child: Column(
         children: [
-          _buildCartHeader(cartItems.length),
-          _buildCustomerSelector(),
+          _buildCartHeader(metadata),
+          _buildContextBadge(metadata),
           const Divider(height: 1),
           
-          // ITEM LIST
           Expanded(
             child: cartItems.isEmpty
                 ? _buildEmptyState()
@@ -47,58 +45,77 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                   ),
           ),
 
-          // SUMMARY & CHECKOUT
-          _buildCheckoutSummary(subtotal, taxAmount, finalTotal),
+          _buildCheckoutSummary(subtotal, taxAmount, finalTotal, metadata),
         ],
       ),
     );
   }
 
-  // --- HEADER WITH QUICK ACTIONS ---
-  Widget _buildCartHeader(int count) {
+  Widget _buildCartHeader(CartMetadata metadata) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
       child: Row(
         children: [
-          const Icon(Icons.shopping_cart_outlined, size: 20, color: Color(0xFF006070)),
+          Icon(_getIconForType(metadata.type), size: 20, color: const Color(0xFF006070)),
           const SizedBox(width: 8),
-          Text("Current Order ($count)", 
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-          const Spacer(),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(metadata.displayName, 
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(_getSubtitleForType(metadata.type), 
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
+              ],
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 22),
-            tooltip: "Clear Cart",
-            onPressed: () => _showClearDialog(),
+            onPressed: () => ref.read(cartProvider.notifier).clearCart(),
           ),
         ],
       ),
     );
   }
 
-  // --- CUSTOMER SELECTOR ---
-  Widget _buildCustomerSelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.person_add_alt_1, size: 18, color: Colors.blueGrey),
-            SizedBox(width: 10),
-            Text("Walk-in Customer", style: TextStyle(fontSize: 13, color: Colors.blueGrey)),
-            Spacer(),
-            Icon(Icons.chevron_right, size: 18, color: Colors.blueGrey),
-          ],
-        ),
+  Widget _buildContextBadge(CartMetadata metadata) {
+    if (metadata.type == CartType.shop) return const SizedBox.shrink();
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Colors.blue.shade50,
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, size: 14, color: Colors.blue),
+          const SizedBox(width: 8),
+          Text(
+            "Finalizing order for ${metadata.targetId}",
+            style: const TextStyle(color: Colors.blue, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
 
-  // --- ITEM ROW ---
+  IconData _getIconForType(CartType type) {
+    switch (type) {
+      case CartType.shop: return Icons.shopping_bag;
+      case CartType.restaurant: return Icons.restaurant;
+      case CartType.hotelBooking: return Icons.hotel;
+      case CartType.roomService: return Icons.room_service;
+    }
+  }
+
+  String _getSubtitleForType(CartType type) {
+    switch (type) {
+      case CartType.shop: return "Standard Retail Sale";
+      case CartType.restaurant: return "Dine-in Order";
+      case CartType.hotelBooking: return "New Reservation";
+      case CartType.roomService: return "Room Order";
+    }
+  }
+
   Widget _buildCartItem(dynamic item) {
     return Container(
       padding: const EdgeInsets.all(10),
@@ -115,7 +132,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
                 child: Text(item.name, 
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
               ),
-              Text("\$${(item.price * item.quantity).toStringAsFixed(2)}", 
+              Text("\$${((item.price ?? 0) * (item.quantity ?? 1)).toStringAsFixed(2)}", 
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ],
           ),
@@ -151,8 +168,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     );
   }
 
-  // --- CHECKOUT AREA ---
-  Widget _buildCheckoutSummary(double subtotal, double tax, double total) {
+  Widget _buildCheckoutSummary(double subtotal, double tax, double total, CartMetadata metadata) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -174,19 +190,22 @@ class _CartPanelState extends ConsumerState<CartPanel> {
           ),
           const SizedBox(height: 20),
           Row(
-            children: ["Cash", "Card", "QR"].map((m) => Expanded(child: _paymentOption(m))).toList(),
-          ),
-          const SizedBox(height: 15),
-          Row(
             children: [
               Expanded(
                 flex: 2,
-                child: _actionButton("Hold Order", Colors.orange.shade50, Colors.orange.shade800, () {}),
+                child: _actionButton("CANCEL", Colors.red.shade50, Colors.red.shade800, () {
+                  ref.read(cartProvider.notifier).resetCart(CartType.shop);
+                }),
               ),
               const SizedBox(width: 10),
               Expanded(
                 flex: 3,
-                child: _actionButton("CHECKOUT", const Color(0xFF006070), Colors.white, () {}),
+                child: _actionButton(
+                  _getCheckoutLabel(metadata.type), 
+                  const Color(0xFF006070), 
+                  Colors.white, 
+                  () => _processCheckout(total)
+                ),
               ),
             ],
           ),
@@ -195,7 +214,32 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     );
   }
 
-  // --- HELPER UI COMPONENTS ---
+  String _getCheckoutLabel(CartType type) {
+    switch (type) {
+      case CartType.hotelBooking: return "CONFIRM BOOKING";
+      case CartType.roomService: return "SEND TO ROOM";
+      case CartType.restaurant: return "PLACE ORDER";
+      default: return "COMPLETE SALE";
+    }
+  }
+
+  void _processCheckout(double total) {
+    // Show success dialog
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text("Success"),
+        content: Text("Order processed successfully for \$${total.toStringAsFixed(2)}"),
+        actions: [
+          TextButton(onPressed: () {
+            ref.read(cartProvider.notifier).resetCart(CartType.shop);
+            Navigator.pop(c);
+          }, child: const Text("Done"))
+        ],
+      )
+    );
+  }
+
   Widget _summaryRow(String label, double amount) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -205,28 +249,6 @@ class _CartPanelState extends ConsumerState<CartPanel> {
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 13)),
           Text("\$${amount.toStringAsFixed(2)}", style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
         ],
-      ),
-    );
-  }
-
-  Widget _paymentOption(String type) {
-    bool isSelected = _selectedPayment == type;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedPayment = type),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF006070) : Colors.white,
-          border: Border.all(color: isSelected ? const Color(0xFF006070) : Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Center(
-          child: Text(type, style: TextStyle(
-            fontSize: 12, 
-            fontWeight: FontWeight.bold,
-            color: isSelected ? Colors.white : Colors.black87)),
-        ),
       ),
     );
   }
@@ -241,7 +263,7 @@ class _CartPanelState extends ConsumerState<CartPanel> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         onPressed: press,
-        child: Text(label, style: TextStyle(color: text, fontWeight: FontWeight.bold, fontSize: 13)),
+        child: Text(label, style: TextStyle(color: text, fontWeight: FontWeight.bold, fontSize: 11)),
       ),
     );
   }
@@ -255,18 +277,13 @@ class _CartPanelState extends ConsumerState<CartPanel> {
     );
   }
 
-  void _showClearDialog() {
-    // Implement clear cart logic here
-  }
-  
-
   Widget _buildEmptyState() => const Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(Icons.shopping_basket_outlined, size: 48, color: Colors.grey),
         SizedBox(height: 10),
-        Text("No items in cart", style: TextStyle(color: Colors.grey)),
+        Text("Your cart is empty", style: TextStyle(color: Colors.grey)),
       ],
     ),
   );
